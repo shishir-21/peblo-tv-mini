@@ -1,12 +1,17 @@
 export const API_URL = '/api/v1';
 
 export async function apiClient(endpoint: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('peblo_cms_token');
-  
-  const headers: HeadersInit = {
+  const token = localStorage.getItem('peblo_token');
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
+  
+  if (options.headers) {
+    const customHeaders = new Headers(options.headers);
+    customHeaders.forEach((value, key) => {
+      headers[key] = value;
+    });
+  }
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

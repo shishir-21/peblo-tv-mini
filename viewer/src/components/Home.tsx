@@ -28,13 +28,12 @@ export function Home({ catalogue }: HomeProps) {
               <div 
                 key={show.show_id}
                 style={{
-                  display: idx === 0 ? 'block' : 'none', // just showing first hero for simplicity
+                  display: idx === 0 ? 'flex' : 'none',
                   height: '100%',
                   backgroundImage: `linear-gradient(to top, var(--color-background) 0%, rgba(17,17,17,0) 100%), url(${bgUrl})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   padding: '4rem 2rem',
-                  display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'flex-end'
                 }}

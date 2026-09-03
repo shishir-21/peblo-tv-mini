@@ -13,6 +13,7 @@ export default defineConfig({
       }
     }
   },
+  // @ts-ignore - test property comes from vitest
   test: {
     environment: 'jsdom',
   }
