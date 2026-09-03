@@ -12,7 +12,11 @@ from app.api.seasons import router as seasons_router
 from app.api.episodes import router as episodes_router
 from app.api.validation import router as validation_router
 
-app = FastAPI(title="Peblo TV CMS API")
+app = FastAPI(
+    title="Peblo TV CMS API",
+    description="The Content Management System API for Peblo TV Mini",
+    version="1.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,

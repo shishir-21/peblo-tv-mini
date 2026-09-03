@@ -22,29 +22,53 @@ CMS (React) → FastAPI → PostgreSQL
 
 ## Quick Start
 
-### 1. Start PostgreSQL
+### 1. Local Development (Dockerized)
+
+The easiest way to run the entire stack locally is using Docker Compose.
 
 ```bash
-docker compose up -d
+# Start DB, Backend, CMS, and Viewer
+docker compose up -d --build
 ```
 
-### 2. Backend setup
+- **Backend API:** `http://localhost:8000`
+- **CMS Frontend:** `http://localhost:5173`
+- **Viewer Frontend:** `http://localhost:5174`
+
+To seed the database with an admin user (`admin@example.com` / `changeme123`) and sample data:
+```bash
+# Wait for the backend container to start, then run:
+docker compose exec backend python -m app.scripts.create_admin admin@example.com changeme123
+docker compose exec backend python -m app.seed
+```
+
+### 2. Manual Development (Without Docker for Apps)
+
+If you prefer to run services manually for faster hot-reloading:
 
 ```bash
+# Start PostgreSQL only
+docker compose up -d db
+
+# Terminal 1: Backend
 cd backend
 python -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
-
-pip install -r requirements-dev.txt
+# activate venv (.venv/Scripts/activate or source .venv/bin/activate)
+pip install -r requirements.txt -r requirements-dev.txt
 alembic upgrade head
 python -m app.seed
 python -m app.scripts.create_admin admin@example.com changeme123
 uvicorn app.main:app --reload --port 8000
+
+# Terminal 2: CMS
+cd cms
+npm install
+npm run dev
+
+# Terminal 3: Viewer
+cd viewer
+npm install
+npm run dev
 ```
 
 API docs: http://localhost:8000/docs

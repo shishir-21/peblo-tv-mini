@@ -12,5 +12,48 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: peblo-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql+psycopg://peblo:peblo_password@db:5432/peblo_tv
+      - SECRET_KEY=peblo-super-secret-key
+      - STORAGE_BACKEND=local
+    volumes:
+      - ./backend:/app
+      - storage_data:/app/storage
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  cms:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    container_name: peblo-cms
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./cms:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  viewer:
+    build:
+      context: ./viewer
+      dockerfile: Dockerfile
+    container_name: peblo-viewer
+    ports:
+      - "5174:5174"
+    volumes:
+      - ./viewer:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5174
+
 volumes:
   postgres_data:
+  storage_data:
