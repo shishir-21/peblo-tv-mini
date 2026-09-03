@@ -10,6 +10,7 @@ import { SeasonList } from './pages/seasons/SeasonList';
 import { SeasonForm } from './pages/seasons/SeasonForm';
 import { EpisodeList } from './pages/episodes/EpisodeList';
 import { EpisodeForm } from './pages/episodes/EpisodeForm';
+import { ArtworkUpload } from './pages/episodes/ArtworkUpload';
 import './index.css';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Route path="episodes" element={<EpisodeList />} />
             <Route path="episodes/new" element={<EpisodeForm />} />
             <Route path="episodes/:id/edit" element={<EpisodeForm />} />
+            <Route path="episodes/:id/artwork" element={<ArtworkUpload />} />
             
             <Route path="categories" element={<div>Categories Placeholder</div>} />
           </Route>
