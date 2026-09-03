@@ -224,10 +224,16 @@ def execute_publish(
         episodes_count = len(entries)
 
         catalogue_path = STORAGE_DIR / "catalogue.json"
+        versioned_path = STORAGE_DIR / "catalogues" / f"catalogue-{publish_run.id}.json"
 
         write_catalogue(
             catalogue=catalogue,
             output_path=catalogue_path,
+        )
+        
+        write_catalogue(
+            catalogue=catalogue,
+            output_path=versioned_path,
         )
 
         publish_run.status = "completed"
