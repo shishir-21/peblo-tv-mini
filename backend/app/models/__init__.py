@@ -6,6 +6,7 @@ from app.models.episode import Episode
 from app.models.artwork import Artwork
 from app.models.category import Category
 from app.models.publish_run import PublishRun
+from app.models.user import User
 from app.models.show_category import show_categories
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "Artwork",
     "Category",
     "PublishRun",
+    "User",
     "show_categories",
 ]
