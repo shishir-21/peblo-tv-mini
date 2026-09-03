@@ -9,7 +9,7 @@ from app.core.dependencies import get_db
 from app.core.permissions import require_editor
 from app.models import Artwork, Episode
 from app.services.artwork import validate_artwork
-from app.storage import LocalStorage
+from app.storage import storage
 
 
 router = APIRouter(
@@ -20,8 +20,6 @@ router = APIRouter(
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORAGE_DIR = BASE_DIR / "storage"
-
-storage = LocalStorage(STORAGE_DIR)
 
 
 @router.post("/{episode_id}/artwork")
