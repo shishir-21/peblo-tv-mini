@@ -6,6 +6,10 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { ShowList } from './pages/shows/ShowList';
 import { ShowForm } from './pages/shows/ShowForm';
+import { SeasonList } from './pages/seasons/SeasonList';
+import { SeasonForm } from './pages/seasons/SeasonForm';
+import { EpisodeList } from './pages/episodes/EpisodeList';
+import { EpisodeForm } from './pages/episodes/EpisodeForm';
 import './index.css';
 
 function App() {
@@ -20,7 +24,17 @@ function App() {
             <Route path="shows" element={<ShowList />} />
             <Route path="shows/new" element={<ShowForm />} />
             <Route path="shows/:id/edit" element={<ShowForm />} />
-            <Route path="seasons" element={<div>Seasons Placeholder</div>} />
+            
+            {/* Season routes */}
+            <Route path="seasons" element={<SeasonList />} />
+            <Route path="seasons/new" element={<SeasonForm />} />
+            <Route path="seasons/:id/edit" element={<SeasonForm />} />
+            
+            {/* Episode routes */}
+            <Route path="episodes" element={<EpisodeList />} />
+            <Route path="episodes/new" element={<EpisodeForm />} />
+            <Route path="episodes/:id/edit" element={<EpisodeForm />} />
+            
             <Route path="categories" element={<div>Categories Placeholder</div>} />
           </Route>
         </Routes>
