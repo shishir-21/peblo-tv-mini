@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+ARG VITE_CATALOGUE_URL
+ENV VITE_CATALOGUE_URL=$VITE_CATALOGUE_URL
 RUN npm run build
 
 # Serve stage

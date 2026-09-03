@@ -45,9 +45,10 @@ export interface Catalogue {
 }
 
 export const STORAGE_URL = import.meta.env.VITE_STORAGE_URL || '/storage';
+const CATALOGUE_URL = import.meta.env.VITE_CATALOGUE_URL || `${STORAGE_URL}/catalogue.json`;
 
 export async function fetchCatalogue(): Promise<Catalogue> {
-  const response = await fetch(`${STORAGE_URL}/catalogue.json`);
+  const response = await fetch(CATALOGUE_URL);
   if (!response.ok) {
     throw new Error('Failed to fetch catalogue. The catalogue might not be published yet.');
   }

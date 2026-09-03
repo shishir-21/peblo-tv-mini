@@ -16,8 +16,6 @@ from app.storage import storage as media_storage
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORAGE_DIR = BASE_DIR / "storage"
 
-catalogue_storage = LocalStorage(STORAGE_DIR)
-
 def validate_catalogue(catalogue: dict) -> None:
     allowed_sections = {
         "featured",
@@ -63,7 +61,6 @@ def validate_catalogue(catalogue: dict) -> None:
                         "Season 0 is reserved for trailers"
                     )
 
-
 def serialize_catalogue(catalogue: dict) -> bytes:
     return json.dumps(
         catalogue,
@@ -72,7 +69,6 @@ def serialize_catalogue(catalogue: dict) -> bytes:
         sort_keys=True,
     ).encode("utf-8")
 
-
 def calculate_catalogue_hash(catalogue: dict) -> str:
     catalogue_bytes = serialize_catalogue(catalogue)
 
@@ -80,23 +76,16 @@ def calculate_catalogue_hash(catalogue: dict) -> str:
         catalogue_bytes
     ).hexdigest()
 
-
-def write_catalogue(
-    catalogue: dict,
-    output_path: Path,
-) -> None:
-    output_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    temporary_path = output_path.with_suffix(".tmp")
-
+def persist_catalogue(catalogue: dict, storage_key: str) -> None:
     catalogue_bytes = serialize_catalogue(catalogue)
-
+    temporary_path = STORAGE_DIR / "_tmp" / f"{uuid.uuid4()}.json"
+    temporary_path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path.write_bytes(catalogue_bytes)
-
-    temporary_path.replace(output_path)
+    
+    try:
+        media_storage.save(temporary_path, storage_key, resource_type="raw")
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
 
 def create_publish_run(
@@ -228,17 +217,14 @@ def execute_publish(
 
         episodes_count = len(entries)
 
-        catalogue_path = STORAGE_DIR / "catalogue.json"
-        versioned_path = STORAGE_DIR / "catalogues" / f"catalogue-{publish_run.id}.json"
-
-        write_catalogue(
+        persist_catalogue(
             catalogue=catalogue,
-            output_path=catalogue_path,
+            storage_key="catalogue.json",
         )
         
-        write_catalogue(
+        persist_catalogue(
             catalogue=catalogue,
-            output_path=versioned_path,
+            storage_key=f"catalogues/catalogue-{publish_run.id}.json",
         )
 
         publish_run.status = "completed"

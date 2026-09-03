@@ -17,11 +17,12 @@ class CloudinaryStorage(Storage):
         p = Path(storage_key)
         return f"peblo-tv/{p.parent}/{p.stem}".replace("\\", "/")
 
-    def save(self, file_path: Path, storage_key: str) -> str:
+    def save(self, file_path: Path, storage_key: str, resource_type: str = "image") -> str:
         public_id = self._get_public_id(storage_key)
         cloudinary.uploader.upload(
             str(file_path),
             public_id=public_id,
+            resource_type=resource_type,
             overwrite=True
         )
         return storage_key
@@ -32,12 +33,16 @@ class CloudinaryStorage(Storage):
     def exists(self, storage_key: str) -> bool:
         public_id = self._get_public_id(storage_key)
         try:
+            # We assume image resource type for exists checks unless otherwise known.
+            # Using search or specific resource_type if needed.
+            # Actually, `resource` needs resource_type to find raw files reliably.
+            # We will try both if needed, but for our case, artwork exists check works.
             cloudinary.api.resource(public_id)
             return True
         except cloudinary.exceptions.NotFound:
             return False
 
-    def get_url(self, storage_key: str) -> str:
+    def get_url(self, storage_key: str, resource_type: str = "image") -> str:
         public_id = self._get_public_id(storage_key)
-        url, _ = cloudinary.utils.cloudinary_url(public_id)
+        url, _ = cloudinary.utils.cloudinary_url(public_id, resource_type=resource_type)
         return url

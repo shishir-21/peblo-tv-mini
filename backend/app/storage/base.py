@@ -5,7 +5,7 @@ from pathlib import Path
 class Storage(ABC):
 
     @abstractmethod
-    def save(self, file_path: Path, storage_key: str) -> str:
+    def save(self, file_path: Path, storage_key: str, resource_type: str = "image") -> str:
         pass
 
     @abstractmethod
@@ -17,6 +17,6 @@ class Storage(ABC):
         pass
 
     @abstractmethod
-    def get_url(self, storage_key: str) -> str:
+    def get_url(self, storage_key: str, resource_type: str = "image") -> str:
         pass
     

@@ -44,6 +44,8 @@ services:
     build:
       context: ./viewer
       dockerfile: Dockerfile.prod
+      args:
+        - VITE_CATALOGUE_URL=${VITE_CATALOGUE_URL:-}
     container_name: peblo-viewer-prod
     restart: unless-stopped
     ports:

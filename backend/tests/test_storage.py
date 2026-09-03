@@ -10,12 +10,12 @@ def test_local_storage(tmp_path):
     file_path = tmp_path / "test.txt"
     file_path.write_text("hello")
     
-    key = storage.save(file_path, "docs/test.txt")
+    key = storage.save(file_path, "docs/test.txt", resource_type="raw")
     assert key == "docs/test.txt"
     
     assert storage.exists("docs/test.txt")
     assert storage.get_path("docs/test.txt") == tmp_path / "docs/test.txt"
-    assert storage.get_url("docs/test.txt") == "/storage/docs/test.txt"
+    assert storage.get_url("docs/test.txt", resource_type="raw") == "/storage/docs/test.txt"
 
 def test_cloudinary_storage_initialization():
     storage = CloudinaryStorage(
