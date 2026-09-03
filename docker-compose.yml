@@ -40,6 +40,8 @@ services:
     volumes:
       - ./cms:/app
       - /app/node_modules
+    environment:
+      - VITE_API_PROXY_TARGET=http://backend:8000
     command: npm run dev -- --host 0.0.0.0
 
   viewer:
@@ -52,6 +54,8 @@ services:
     volumes:
       - ./viewer:/app
       - /app/node_modules
+    environment:
+      - VITE_API_PROXY_TARGET=http://backend:8000
     command: npm run dev -- --host 0.0.0.0 --port 5174
 
 volumes:
