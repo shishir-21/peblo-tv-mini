@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -48,8 +50,17 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token contains an invalid user identifier",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     user = db.scalar(
-        select(User).where(User.id == user_id)
+        select(User).where(User.id == user_uuid)
     )
 
     if user is None:

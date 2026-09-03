@@ -11,8 +11,8 @@ __pycache__/
 node_modules/
 dist/
 
-# Uploaded files
-storage/
+# Uploaded files and generated catalogue (not the storage Python package)
+backend/storage/
 
 # IDE
 .vscode/
