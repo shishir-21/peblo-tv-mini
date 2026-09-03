@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models import Episode, PublishRun, Season
 from app.storage import LocalStorage
+from app.services.validation import validate_content
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORAGE_DIR = BASE_DIR / "storage"
@@ -198,6 +199,11 @@ def execute_publish(
     )
 
     try:
+        report = validate_content(db)
+        if not report["valid"]:
+            error_codes = [err["code"] for err in report["errors"]]
+            raise ValueError(f"Content validation failed with errors: {error_codes}")
+
         catalogue = build_catalogue(db)
 
         validate_catalogue(catalogue)
