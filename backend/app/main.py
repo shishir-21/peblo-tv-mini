@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -11,9 +12,17 @@ from app.api.seasons import router as seasons_router
 from app.api.episodes import router as episodes_router
 from app.api.validation import router as validation_router
 
-app = FastAPI(
-    title="Peblo TV Mini API",
-    version="1.0.0",
+app = FastAPI(title="Peblo TV CMS API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173", # CMS
+        "http://localhost:5174", # Viewer
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(auth_router)
