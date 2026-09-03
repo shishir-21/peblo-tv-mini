@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { Catalogue, fetchCatalogue } from './api';
 import { Home } from './components/Home';
+import { SearchPage } from './components/SearchPage';
+import { ShowDetails } from './components/ShowDetails';
+import { Search } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -49,16 +52,21 @@ function App() {
           <Link to="/" style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>
             PEBLO TV
           </Link>
-          <nav style={{ display: 'flex', gap: '1.5rem' }}>
+          <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <Link to="/" style={{ fontWeight: 600 }}>Home</Link>
             <Link to="/shows" style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>Shows</Link>
             <Link to="/movies" style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>Movies</Link>
+            <Link to="/search" style={{ color: 'var(--color-text-main)' }}>
+              <Search size={24} />
+            </Link>
           </nav>
         </header>
 
         <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home catalogue={catalogue} />} />
+            <Route path="/search" element={<SearchPage catalogue={catalogue} />} />
+            <Route path="/shows/:slug" element={<ShowDetails catalogue={catalogue} />} />
             {/* Additional routes will go here */}
           </Routes>
         </main>
