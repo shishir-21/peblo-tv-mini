@@ -1,11 +1,115 @@
 from collections import defaultdict
+from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Episode, Season
+from app.models import Episode, PublishRun, Season
+from app.storage import LocalStorage
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+STORAGE_DIR = BASE_DIR / "storage"
+
+storage = LocalStorage(STORAGE_DIR)
+
+def validate_catalogue(catalogue: dict) -> None:
+    allowed_sections = {
+        "featured",
+        "series",
+        "minisodes",
+        "songs",
+    }
+
+    sections = catalogue.get("sections", {})
+
+    for section in sections:
+        if section not in allowed_sections:
+            raise ValueError(
+                f"Invalid catalogue section: {section}"
+            )
+
+    for section_entries in sections.values():
+        for entry in section_entries:
+            if not entry["show_title"]:
+                raise ValueError(
+                    "Catalogue entry is missing show title"
+                )
+
+            if not entry["slug"]:
+                raise ValueError(
+                    "Catalogue entry is missing show slug"
+                )
+
+            if not entry["content_group"]:
+                raise ValueError(
+                    "Catalogue entry is missing content group"
+                )
+
+            if not entry["languages"]:
+                raise ValueError(
+                    f"Catalogue entry {entry['content_group']} "
+                    "has no languages"
+                )
+
+            if entry["season_number"] == 0:
+                if entry["episode_title"].lower() != "trailer":
+                    raise ValueError(
+                        "Season 0 is reserved for trailers"
+                    )
+
+
+def serialize_catalogue(catalogue: dict) -> bytes:
+    return json.dumps(
+        catalogue,
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=True,
+    ).encode("utf-8")
+
+
+def calculate_catalogue_hash(catalogue: dict) -> str:
+    catalogue_bytes = serialize_catalogue(catalogue)
+
+    return hashlib.sha256(
+        catalogue_bytes
+    ).hexdigest()
+
+
+def write_catalogue(
+    catalogue: dict,
+    output_path: Path,
+) -> None:
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    temporary_path = output_path.with_suffix(".tmp")
+
+    catalogue_bytes = serialize_catalogue(catalogue)
+
+    temporary_path.write_bytes(catalogue_bytes)
+
+    temporary_path.replace(output_path)
+
+
+def create_publish_run(
+    db: Session,
+    triggered_by: str | None = None,
+) -> PublishRun:
+    publish_run = PublishRun(
+        triggered_by=triggered_by,
+        status="running",
+    )
+
+    db.add(publish_run)
+    db.commit()
+    db.refresh(publish_run)
+
+    return publish_run
 
 
 def build_catalogue(db: Session) -> dict:
@@ -84,29 +188,60 @@ def build_catalogue(db: Session) -> dict:
     }
 
 
-def write_catalogue(
-    catalogue: dict,
-    output_path: Path,
-) -> None:
-    output_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+def execute_publish(
+    db: Session,
+    triggered_by: str | None = None,
+) -> PublishRun:
+    publish_run = create_publish_run(
+        db=db,
+        triggered_by=triggered_by,
     )
 
-    temporary_path = output_path.with_suffix(".tmp")
+    try:
+        catalogue = build_catalogue(db)
 
-    with open(
-        temporary_path,
-        "w",
-        encoding="utf-8",
-    ) as file:
-        json.dump(
-            catalogue,
-            file,
-            ensure_ascii=False,
-            indent=2,
-            sort_keys=True,
+        validate_catalogue(catalogue)
+
+        catalogue_hash = calculate_catalogue_hash(catalogue)
+
+        entries = [
+            entry
+            for section_entries in catalogue["sections"].values()
+            for entry in section_entries
+        ]
+
+        shows_count = len({
+            entry["slug"]
+            for entry in entries
+        })
+
+        episodes_count = len(entries)
+
+        catalogue_path = STORAGE_DIR / "catalogue.json"
+
+        write_catalogue(
+            catalogue=catalogue,
+            output_path=catalogue_path,
         )
 
-    temporary_path.replace(output_path)
+        publish_run.status = "completed"
+        publish_run.completed_at = datetime.now(timezone.utc)
+        publish_run.shows_count = shows_count
+        publish_run.episodes_count = episodes_count
+        publish_run.catalogue_hash = catalogue_hash
+
+        db.commit()
+        db.refresh(publish_run)
+
+        return publish_run
+
+    except Exception as exc:
+        publish_run.status = "failed"
+        publish_run.completed_at = datetime.now(timezone.utc)
+        publish_run.error_message = str(exc)
+
+        db.commit()
+        db.refresh(publish_run)
+
+        raise
     
