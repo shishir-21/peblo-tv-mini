@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from app.api.auth import router as auth_router
 from app.api.artwork import router as artwork_router
@@ -23,6 +25,9 @@ app.include_router(seasons_router)
 app.include_router(episodes_router)
 app.include_router(validation_router)
 
+storage_path = Path(__file__).resolve().parents[2] / "storage"
+storage_path.mkdir(parents=True, exist_ok=True)
+app.mount("/storage", StaticFiles(directory=str(storage_path)), name="storage")
 
 @app.get("/health")
 def health_check():
