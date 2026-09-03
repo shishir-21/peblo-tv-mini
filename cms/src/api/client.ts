@@ -1,7 +1,7 @@
 export const API_URL = '/api/v1';
 
 export async function apiClient(endpoint: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('peblo_token');
+  const token = localStorage.getItem('peblo_cms_token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
