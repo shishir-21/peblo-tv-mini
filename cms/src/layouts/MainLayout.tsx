@@ -60,7 +60,9 @@ export function MainLayout() {
           <Link to="/seasons" style={navItemStyle}><ListVideo size={20} /> Seasons</Link>
           <Link to="/categories" style={navItemStyle}><LayoutGrid size={20} /> Categories</Link>
           <Link to="/validation" style={navItemStyle}><CheckCircle size={20} /> Validation</Link>
-          <Link to="/publish" style={navItemStyle}><UploadCloud size={20} /> Publish</Link>
+          {user.role === 'admin' && (
+            <Link to="/publish" style={navItemStyle}><UploadCloud size={20} /> Publish</Link>
+          )}
         </nav>
         
         <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>

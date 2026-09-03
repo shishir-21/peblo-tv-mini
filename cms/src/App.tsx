@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { MainLayout } from './layouts/MainLayout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -14,6 +14,11 @@ import { ArtworkUpload } from './pages/episodes/ArtworkUpload';
 import { ValidationDashboard } from './pages/ValidationDashboard';
 import { PublishingDashboard } from './pages/PublishingDashboard';
 import './index.css';
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return user?.role === 'admin' ? <>{children}</> : <Navigate to="/" replace />;
+}
 
 function App() {
   return (
@@ -40,7 +45,7 @@ function App() {
             <Route path="episodes/:id/artwork" element={<ArtworkUpload />} />
             
             <Route path="validation" element={<ValidationDashboard />} />
-            <Route path="publish" element={<PublishingDashboard />} />
+            <Route path="publish" element={<AdminRoute><PublishingDashboard /></AdminRoute>} />
             
             <Route path="categories" element={<div>Categories Placeholder</div>} />
           </Route>
