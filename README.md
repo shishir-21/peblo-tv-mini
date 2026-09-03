@@ -92,7 +92,7 @@ Copy `.env.example` to `.env` and adjust values as needed.
 
 - **Backend:** FastAPI, SQLAlchemy, PostgreSQL, Alembic, JWT, Argon2
 - **Frontend:** React, TypeScript, Vite (planned)
-- **Storage:** Local filesystem (dev), Cloudflare R2 (production)
+- **Storage:** Local filesystem (dev), Cloudinary (production)
 
 ## Development Status
 

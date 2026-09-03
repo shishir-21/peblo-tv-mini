@@ -10,15 +10,12 @@ class Settings(BaseSettings):
     
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:5174"
-    
-    # Storage
     storage_backend: str = "local"
-    r2_account_id: str | None = None
-    r2_access_key_id: str | None = None
-    r2_secret_access_key: str | None = None
-    r2_bucket_name: str | None = None
-    r2_endpoint: str | None = None
-    r2_public_url: str | None = None
+    
+    # Cloudinary
+    cloudinary_cloud_name: str | None = None
+    cloudinary_api_key: str | None = None
+    cloudinary_api_secret: str | None = None
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

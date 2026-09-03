@@ -13,6 +13,13 @@ export interface Episode {
   };
 }
 
+export interface Artwork {
+  storage_key: string;
+  url?: string;
+  width: number;
+  height: number;
+}
+
 export interface Season {
   season_id: string;
   season_number: number;
@@ -83,9 +90,9 @@ export async function fetchCatalogue(): Promise<Catalogue> {
       }
       
       const artwork: any = {};
-      if (entry.artwork?.poster?.storage_key) artwork.poster = entry.artwork.poster.storage_key;
-      if (entry.artwork?.banner?.storage_key) artwork.banner = entry.artwork.banner.storage_key;
-      if (entry.artwork?.thumbnail?.storage_key) artwork.thumbnail = entry.artwork.thumbnail.storage_key;
+      if (entry.artwork?.poster) artwork.poster = entry.artwork.poster.url || entry.artwork.poster.storage_key;
+      if (entry.artwork?.banner) artwork.banner = entry.artwork.banner.url || entry.artwork.banner.storage_key;
+      if (entry.artwork?.thumbnail) artwork.thumbnail = entry.artwork.thumbnail.url || entry.artwork.thumbnail.storage_key;
       
       for (const lang of entry.languages || ['en']) {
         const episodeId = `${entry.content_group}-${lang}`;
@@ -123,7 +130,9 @@ export async function fetchCatalogue(): Promise<Catalogue> {
   };
 }
 
-export function getArtworkUrl(path: string | undefined): string | undefined {
+export function getArtworkUrl(path: string | undefined, url: string | undefined = undefined): string | undefined {
+  if (url) return url;
   if (!path) return undefined;
+  if (path.startsWith('http')) return path;
   return `${STORAGE_URL}/${path}`;
 }

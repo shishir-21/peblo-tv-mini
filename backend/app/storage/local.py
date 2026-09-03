@@ -27,4 +27,7 @@ class LocalStorage(Storage):
 
     def exists(self, storage_key: str) -> bool:
         return self.get_path(storage_key).exists()
+
+    def get_url(self, storage_key: str) -> str:
+        return f"/storage/{storage_key}"
     

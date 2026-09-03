@@ -11,11 +11,12 @@ from sqlalchemy.orm import Session, joinedload
 from app.models import Episode, PublishRun, Season
 from app.storage import LocalStorage
 from app.services.validation import validate_content
+from app.storage import storage as media_storage
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORAGE_DIR = BASE_DIR / "storage"
 
-storage = LocalStorage(STORAGE_DIR)
+catalogue_storage = LocalStorage(STORAGE_DIR)
 
 def validate_catalogue(catalogue: dict) -> None:
     allowed_sections = {
@@ -163,6 +164,7 @@ def build_catalogue(db: Session) -> dict:
         for artwork in episode.artworks:
             entry["artwork"][artwork.artwork_type] = {
                 "storage_key": artwork.storage_key,
+                "url": media_storage.get_url(artwork.storage_key),
                 "width": artwork.width,
                 "height": artwork.height,
             }

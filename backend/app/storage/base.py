@@ -15,4 +15,8 @@ class Storage(ABC):
     @abstractmethod
     def exists(self, storage_key: str) -> bool:
         pass
+
+    @abstractmethod
+    def get_url(self, storage_key: str) -> str:
+        pass
     

@@ -24,10 +24,9 @@ services:
       - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-peblo}:${POSTGRES_PASSWORD:-peblo_password}@db:5432/${POSTGRES_DB:-peblo_tv}
       - SECRET_KEY=${SECRET_KEY:-changeme}
       - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
-      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
-      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
-      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
-      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
     volumes:
       - storage_data_prod:/app/storage
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
