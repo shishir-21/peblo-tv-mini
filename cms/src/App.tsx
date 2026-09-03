@@ -12,6 +12,7 @@ import { EpisodeList } from './pages/episodes/EpisodeList';
 import { EpisodeForm } from './pages/episodes/EpisodeForm';
 import { ArtworkUpload } from './pages/episodes/ArtworkUpload';
 import { ValidationDashboard } from './pages/ValidationDashboard';
+import { PublishingDashboard } from './pages/PublishingDashboard';
 import './index.css';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
             <Route path="episodes/:id/artwork" element={<ArtworkUpload />} />
             
             <Route path="validation" element={<ValidationDashboard />} />
+            <Route path="publish" element={<PublishingDashboard />} />
             
             <Route path="categories" element={<div>Categories Placeholder</div>} />
           </Route>
