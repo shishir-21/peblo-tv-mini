@@ -1,4 +1,4 @@
-export const API_URL = '/api/v1';
+export const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export async function apiClient(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('peblo_cms_token');

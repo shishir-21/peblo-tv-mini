@@ -21,7 +21,7 @@ def publish_catalogue(
 ):
     publish_run = execute_publish(
         db=db,
-        triggered_by=str(current_user.id),
+        triggered_by=current_user.id,
     )
 
     return {

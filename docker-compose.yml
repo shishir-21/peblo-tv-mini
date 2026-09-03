@@ -22,9 +22,10 @@ services:
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql+psycopg://peblo:peblo_password@db:5432/peblo_tv
-      - SECRET_KEY=peblo-super-secret-key
-      - STORAGE_BACKEND=local
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg://peblo:peblo_password@db:5432/peblo_tv}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-before-production}
+      - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174}
     volumes:
       - ./backend:/app
       - storage_data:/app/storage

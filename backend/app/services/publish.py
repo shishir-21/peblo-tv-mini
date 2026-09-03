@@ -2,6 +2,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 import hashlib
 import json
+import uuid
 from pathlib import Path
 
 from sqlalchemy import select
@@ -99,7 +100,7 @@ def write_catalogue(
 
 def create_publish_run(
     db: Session,
-    triggered_by: str | None = None,
+    triggered_by: uuid.UUID | None = None,
 ) -> PublishRun:
     publish_run = PublishRun(
         triggered_by=triggered_by,
@@ -189,9 +190,11 @@ def build_catalogue(db: Session) -> dict:
     }
 
 
+import uuid
+
 def execute_publish(
     db: Session,
-    triggered_by: str | None = None,
+    triggered_by: uuid.UUID | None = None,
 ) -> PublishRun:
     publish_run = create_publish_run(
         db=db,

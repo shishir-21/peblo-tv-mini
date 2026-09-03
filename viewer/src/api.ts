@@ -37,8 +37,10 @@ export interface Catalogue {
   shows: Show[];
 }
 
+export const STORAGE_URL = import.meta.env.VITE_STORAGE_URL || '/storage';
+
 export async function fetchCatalogue(): Promise<Catalogue> {
-  const response = await fetch('/storage/catalogue.json');
+  const response = await fetch(`${STORAGE_URL}/catalogue.json`);
   if (!response.ok) {
     throw new Error('Failed to fetch catalogue. The catalogue might not be published yet.');
   }
@@ -123,5 +125,5 @@ export async function fetchCatalogue(): Promise<Catalogue> {
 
 export function getArtworkUrl(path: string | undefined): string | undefined {
   if (!path) return undefined;
-  return `/storage/${path}`;
+  return `${STORAGE_URL}/${path}`;
 }

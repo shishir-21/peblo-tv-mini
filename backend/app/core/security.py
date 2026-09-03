@@ -35,7 +35,9 @@ def verify_password(
 # JWT configuration
 # -------------------------------------------------
 
-SECRET_KEY = "dev-secret-key-change-before-production"
+from app.core.config import settings
+
+SECRET_KEY = settings.secret_key
 
 ALGORITHM = "HS256"
 
