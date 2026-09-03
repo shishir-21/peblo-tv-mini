@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, LayoutDashboard, Film, ListVideo, LayoutGrid } from 'lucide-react';
+import { LogOut, LayoutDashboard, Film, ListVideo, LayoutGrid, CheckCircle } from 'lucide-react';
 
 export function MainLayout() {
   const { user, loading, logout } = useAuth();
@@ -59,6 +59,7 @@ export function MainLayout() {
           <Link to="/shows" style={navItemStyle}><Film size={20} /> Shows</Link>
           <Link to="/seasons" style={navItemStyle}><ListVideo size={20} /> Seasons</Link>
           <Link to="/categories" style={navItemStyle}><LayoutGrid size={20} /> Categories</Link>
+          <Link to="/validation" style={navItemStyle}><CheckCircle size={20} /> Validation</Link>
         </nav>
         
         <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
