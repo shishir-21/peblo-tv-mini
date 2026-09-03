@@ -4,6 +4,7 @@ import { Catalogue, fetchCatalogue } from './api';
 import { Home } from './components/Home';
 import { SearchPage } from './components/SearchPage';
 import { ShowDetails } from './components/ShowDetails';
+import { WatchPage } from './components/WatchPage';
 import { Search } from 'lucide-react';
 import './index.css';
 
@@ -67,6 +68,7 @@ function App() {
             <Route path="/" element={<Home catalogue={catalogue} />} />
             <Route path="/search" element={<SearchPage catalogue={catalogue} />} />
             <Route path="/shows/:slug" element={<ShowDetails catalogue={catalogue} />} />
+            <Route path="/watch/:id" element={<WatchPage catalogue={catalogue} />} />
             {/* Additional routes will go here */}
           </Routes>
         </main>
