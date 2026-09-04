@@ -70,7 +70,17 @@ export function PublishingDashboard() {
                 {validation?.valid ? 'Ready to Publish' : 'Blocking Errors Found'}
               </div>
               {!validation?.valid && (
-                <p style={{ color: 'var(--color-text-muted)' }}>You must fix validation errors before publishing.</p>
+                <div>
+                  <p style={{ color: 'var(--color-text-muted)' }}>You must fix validation errors before publishing.</p>
+                  <ul style={{ marginTop: '1rem', color: 'var(--color-error)' }}>
+                    {validation?.errors?.slice(0, 5).map((err: any, i: number) => (
+                      <li key={i}>{err.message}</li>
+                    ))}
+                    {validation?.errors?.length > 5 && (
+                      <li>...and {validation.errors.length - 5} more. Check Validation Dashboard.</li>
+                    )}
+                  </ul>
+                </div>
               )}
             </div>
             {isAdmin ? (

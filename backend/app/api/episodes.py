@@ -51,7 +51,8 @@ def create_episode(data: EpisodeCreate, db: Session = Depends(get_db)):
 
 @router.get("", response_model=List[EpisodeOut])
 def list_episodes(season_id: UUID = None, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    query = select(Episode).order_by(Episode.episode_number.asc())
+    from sqlalchemy.orm import selectinload
+    query = select(Episode).options(selectinload(Episode.artworks)).order_by(Episode.episode_number.asc())
     if season_id:
         query = query.where(Episode.season_id == season_id)
         
@@ -61,7 +62,8 @@ def list_episodes(season_id: UUID = None, skip: int = 0, limit: int = 100, db: S
 
 @router.get("/{episode_id}", response_model=EpisodeOut)
 def get_episode(episode_id: UUID, db: Session = Depends(get_db)):
-    episode = db.scalar(select(Episode).where(Episode.id == episode_id))
+    from sqlalchemy.orm import selectinload
+    episode = db.scalar(select(Episode).options(selectinload(Episode.artworks)).where(Episode.id == episode_id))
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
     return episode
@@ -69,7 +71,8 @@ def get_episode(episode_id: UUID, db: Session = Depends(get_db)):
 
 @router.put("/{episode_id}", response_model=EpisodeOut)
 def update_episode(episode_id: UUID, data: EpisodeUpdate, db: Session = Depends(get_db)):
-    episode = db.scalar(select(Episode).where(Episode.id == episode_id))
+    from sqlalchemy.orm import selectinload
+    episode = db.scalar(select(Episode).options(selectinload(Episode.artworks)).where(Episode.id == episode_id))
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
         

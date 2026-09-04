@@ -1,31 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
-export function ArtworkUpload() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+const ARTWORK_TYPES = [
+  { id: 'poster', label: 'Poster', specs: '600x900, max 200KB, 2:3' },
+  { id: 'banner', label: 'Banner', specs: '1280x720, max 200KB, 16:9' },
+  { id: 'thumbnail', label: 'Thumbnail', specs: '640x360, max 200KB, 16:9' },
+];
 
+function ArtworkSlot({ type, label, specs, episodeId, existingUrl, onUploadSuccess }: any) {
   const [file, setFile] = useState<File | null>(null);
-  const [artworkType, setArtworkType] = useState('poster');
-  const [preview, setPreview] = useState('');
+  const [preview, setPreview] = useState(existingUrl || '');
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (existingUrl) setPreview(existingUrl);
+  }, [existingUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected) {
       setFile(selected);
       setPreview(URL.createObjectURL(selected));
+      setError('');
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpload = async () => {
     if (!file) return;
-
     setUploading(true);
     setError('');
 
@@ -33,12 +38,12 @@ export function ArtworkUpload() {
     formData.append('file', file);
 
     try {
-      await apiClient(`/episodes/${id}/artwork?artwork_type=${artworkType}`, {
+      await apiClient(`/episodes/${episodeId}/artwork?artwork_type=${type}`, {
         method: 'POST',
         body: formData,
       });
-      alert('Artwork uploaded successfully!');
-      navigate(`/episodes`);
+      alert(`${label} uploaded successfully!`);
+      onUploadSuccess();
     } catch (err: any) {
       setError(err.message || 'Upload failed');
     } finally {
@@ -47,47 +52,90 @@ export function ArtworkUpload() {
   };
 
   return (
-    <Card style={{ maxWidth: '600px' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>Upload Artwork</h2>
-      {error && <div style={{ color: 'var(--color-error)', marginBottom: '1rem' }}>{error}</div>}
-      
-      <form onSubmit={handleUpload}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Artwork Type</label>
-          <select 
-            value={artworkType} 
-            onChange={(e) => setArtworkType(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
-          >
-            <option value="poster">Poster (600x900, max 200KB)</option>
-            <option value="banner">Banner (1280x720, max 200KB)</option>
-            <option value="thumbnail">Thumbnail (640x360, max 200KB)</option>
-          </select>
-        </div>
+    <Card style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, marginRight: '1rem' }}>
+          <h3 style={{ margin: '0 0 0.5rem 0' }}>{label}</h3>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
+            Required dimensions: {specs}
+          </p>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>File</label>
           <input 
             type="file" 
             accept="image/jpeg, image/png, image/webp" 
             onChange={handleFileChange} 
-            required 
-            style={{ display: 'block', width: '100%', padding: '0.5rem 0' }}
+            style={{ display: 'block', width: '100%', marginBottom: '1rem' }}
           />
-        </div>
 
-        {preview && (
-          <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-            <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Preview</p>
-            <img src={preview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: 'var(--radius-sm)' }} />
-          </div>
-        )}
+          {error && <div style={{ color: 'var(--color-error)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-          <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={uploading}>Cancel</Button>
-          <Button type="submit" isLoading={uploading} disabled={!file}>Upload</Button>
+          <Button type="button" isLoading={uploading} disabled={!file} onClick={handleUpload}>
+            Upload {label}
+          </Button>
         </div>
-      </form>
+        
+        <div style={{ width: '200px', flexShrink: 0, textAlign: 'center' }}>
+          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600, fontSize: '0.875rem' }}>Preview</p>
+          {preview ? (
+            <img 
+              src={preview} 
+              alt={`${label} Preview`} 
+              style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} 
+            />
+          ) : (
+            <div style={{ width: '100%', height: '150px', backgroundColor: 'var(--color-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+              No image
+            </div>
+          )}
+        </div>
+      </div>
     </Card>
+  );
+}
+
+export function ArtworkUpload() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [existingArtworks, setExistingArtworks] = useState<any>({});
+  
+  const fetchEpisode = async () => {
+    try {
+      const data = await apiClient(`/episodes/${id}`);
+      if (data.artworks) {
+        const mapping: any = {};
+        for (const aw of data.artworks) {
+          // Fallback to storage_key if url isn't returned by backend
+          mapping[aw.artwork_type] = aw.url || aw.storage_key; 
+        }
+        setExistingArtworks(mapping);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchEpisode();
+  }, [id]);
+
+  return (
+    <div style={{ maxWidth: '800px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h2 style={{ margin: 0 }}>Upload Artwork</h2>
+        <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+      </div>
+      
+      {ARTWORK_TYPES.map(type => (
+        <ArtworkSlot 
+          key={type.id}
+          type={type.id}
+          label={type.label}
+          specs={type.specs}
+          episodeId={id}
+          existingUrl={existingArtworks[type.id]}
+          onUploadSuccess={fetchEpisode}
+        />
+      ))}
+    </div>
   );
 }

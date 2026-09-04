@@ -29,8 +29,19 @@ class EpisodeUpdate(BaseModel):
     status: Optional[str] = None
 
 
+class ArtworkOut(BaseModel):
+    id: UUID
+    artwork_type: str
+    storage_key: str
+    width: int
+    height: int
+    size_bytes: int
+    
+    model_config = ConfigDict(from_attributes=True)
+
 class EpisodeOut(EpisodeBase):
     id: UUID
     season_id: UUID
+    artworks: list[ArtworkOut] = []
 
     model_config = ConfigDict(from_attributes=True)
