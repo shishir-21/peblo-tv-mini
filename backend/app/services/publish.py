@@ -204,6 +204,13 @@ def execute_publish(
 
         catalogue_hash = calculate_catalogue_hash(catalogue)
 
+        latest_run = db.scalar(
+            select(PublishRun)
+            .where(PublishRun.status == "completed")
+            .order_by(PublishRun.completed_at.desc())
+            .limit(1)
+        )
+
         entries = [
             entry
             for section_entries in catalogue["sections"].values()
@@ -216,6 +223,17 @@ def execute_publish(
         })
 
         episodes_count = len(entries)
+
+        if latest_run and latest_run.catalogue_hash == catalogue_hash:
+            publish_run.status = "completed"
+            publish_run.completed_at = datetime.now(timezone.utc)
+            publish_run.shows_count = shows_count
+            publish_run.episodes_count = episodes_count
+            publish_run.catalogue_hash = catalogue_hash
+            
+            db.commit()
+            db.refresh(publish_run)
+            return publish_run
 
         persist_catalogue(
             catalogue=catalogue,

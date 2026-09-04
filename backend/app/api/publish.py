@@ -13,6 +13,14 @@ router = APIRouter(
     tags=["Publishing"],
 )
 
+@router.get("/validate")
+def validate_publish_content(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    from app.services.validation import validate_content
+    return validate_content(db)
+
 
 @router.post("")
 def publish_catalogue(
