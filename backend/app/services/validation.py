@@ -78,7 +78,7 @@ def validate_content(db: Session) -> Dict[str, Any]:
             
         # Duration
         if not ep.duration_seconds or ep.duration_seconds <= 0:
-            warnings.append({
+            errors.append({
                 "code": "MISSING_DURATION",
                 "message": "Published episode is missing duration",
                 "episode_id": str(ep.id)

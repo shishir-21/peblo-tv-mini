@@ -60,14 +60,8 @@ async def upload_artwork(
         )
     )
 
-    if existing_artwork is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"{artwork_type} artwork already exists "
-                "for this episode"
-            ),
-        )
+    # Instead of throwing 409, we will overwrite the existing artwork.
+    # Cloudinary `save` already has overwrite=True.
 
     extension = Path(file.filename or "").suffix.lower()
 
@@ -101,16 +95,23 @@ async def upload_artwork(
     image = Image.open(BytesIO(file_bytes))
     width, height = image.size
 
-    artwork = Artwork(
-        episode_id=episode.id,
-        artwork_type=artwork_type,
-        storage_key=storage_key,
-        width=width,
-        height=height,
-        size_bytes=len(file_bytes),
-    )
+    if existing_artwork:
+        existing_artwork.storage_key = storage_key
+        existing_artwork.width = width
+        existing_artwork.height = height
+        existing_artwork.size_bytes = len(file_bytes)
+        artwork = existing_artwork
+    else:
+        artwork = Artwork(
+            episode_id=episode.id,
+            artwork_type=artwork_type,
+            storage_key=storage_key,
+            width=width,
+            height=height,
+            size_bytes=len(file_bytes),
+        )
+        db.add(artwork)
 
-    db.add(artwork)
     db.commit()
     db.refresh(artwork)
 

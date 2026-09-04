@@ -22,6 +22,12 @@ def create_episode(data: EpisodeCreate, db: Session = Depends(get_db)):
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
         
+    if data.status == "published":
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot publish a new episode directly because required artwork must be uploaded first."
+        )
+        
     episode = Episode(
         episode_id=data.episode_id,
         season_id=data.season_id,
@@ -71,6 +77,18 @@ def update_episode(episode_id: UUID, data: EpisodeUpdate, db: Session = Depends(
     for key, value in update_data.items():
         setattr(episode, key, value)
         
+    if episode.status == "published":
+        if not episode.duration_seconds or episode.duration_seconds <= 0:
+            raise HTTPException(status_code=400, detail="Duration is required for published episodes.")
+            
+        from app.models import Artwork
+        artworks = db.scalars(select(Artwork).where(Artwork.episode_id == episode.id)).all()
+        types = {aw.artwork_type for aw in artworks}
+        required = {"poster", "banner", "thumbnail"}
+        missing = required - types
+        if missing:
+            raise HTTPException(status_code=400, detail=f"Cannot publish. Missing artwork: {', '.join(missing)}")
+
     try:
         db.commit()
         db.refresh(episode)
