@@ -9,7 +9,7 @@ class PublishRunOut(BaseModel):
     status: str
     started_at: datetime
     completed_at: Optional[datetime]
-    triggered_by: Optional[str]
+    triggered_by: Optional[UUID]
     shows_count: Optional[int]
     episodes_count: Optional[int]
     catalogue_hash: Optional[str]
