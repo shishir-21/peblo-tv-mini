@@ -77,6 +77,11 @@ API docs: http://localhost:8000/docs
 
 Copy `.env.example` to `.env` and adjust values as needed.
 
+For the production API on Render, set `CORS_ORIGINS` to a comma-separated list
+that includes the deployed CMS origin, for example
+`https://peblo-tv-cms.vercel.app`. Redeploy the Render service after changing
+the variable so browser preflight requests receive the CORS headers.
+
 ## Current API Endpoints
 
 | Method | Path | Auth | Description |

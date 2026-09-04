@@ -9,7 +9,13 @@ class Settings(BaseSettings):
     secret_key: str | None = Field(default=None)
     
     # CORS
-    cors_origins: str = "http://localhost:5173,http://localhost:5174"
+    # Keep local development clients working while allowing the production CMS
+    # when CORS_ORIGINS has not yet been configured by the hosting provider.
+    cors_origins: str = (
+        "http://localhost:5173,"
+        "http://localhost:5174,"
+        "https://peblo-tv-cms.vercel.app"
+    )
     storage_backend: str = "local"
     
     # Cloudinary
