@@ -1,10 +1,10 @@
 export interface Episode {
-  episode_id: string;
+  episode_id: string; // We'll just use content_group here
   title: string;
   episode_number: number;
   synopsis: string | null;
   duration_seconds: number | null;
-  language: string;
+  languages: string[];
   content_group: string;
   artwork: {
     poster?: string;
@@ -95,20 +95,18 @@ export async function fetchCatalogue(): Promise<Catalogue> {
       if (entry.artwork?.banner) artwork.banner = entry.artwork.banner.url || entry.artwork.banner.storage_key;
       if (entry.artwork?.thumbnail) artwork.thumbnail = entry.artwork.thumbnail.url || entry.artwork.thumbnail.storage_key;
       
-      for (const lang of entry.languages || ['en']) {
-        const episodeId = `${entry.content_group}-${lang}`;
-        if (!season.episodes.find(e => e.episode_id === episodeId)) {
-          season.episodes.push({
-            episode_id: episodeId,
-            title: entry.episode_title,
-            episode_number: entry.episode_number,
-            synopsis: entry.synopsis || null,
-            duration_seconds: entry.duration_seconds || null,
-            language: lang,
-            content_group: entry.content_group,
-            artwork,
-          });
-        }
+      const episodeId = entry.content_group;
+      if (!season.episodes.find(e => e.episode_id === episodeId)) {
+        season.episodes.push({
+          episode_id: episodeId,
+          title: entry.episode_title,
+          episode_number: entry.episode_number,
+          synopsis: entry.synopsis || null,
+          duration_seconds: entry.duration_seconds || null,
+          languages: entry.languages || ['en'],
+          content_group: entry.content_group,
+          artwork,
+        });
       }
     }
   }

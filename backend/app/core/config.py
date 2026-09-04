@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    @property
+    def parsed_cors_origins(self) -> list[str]:
+        return [
+            origin.strip().rstrip("/") 
+            for origin in self.cors_origins.split(",") 
+            if origin.strip()
+        ]
+
 settings = Settings()
 
 # Provide a safe development default, but fail fast in production

@@ -113,7 +113,7 @@ export function ShowDetails({ catalogue }: { catalogue: Catalogue }) {
                         {ep.episode_number}. {ep.title}
                       </h3>
                       <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-                        {ep.language.toUpperCase()} • {ep.content_group}
+                        {ep.languages.map(l => l.toUpperCase()).join(', ')} • {ep.content_group}
                       </div>
                       <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-muted)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {ep.synopsis}

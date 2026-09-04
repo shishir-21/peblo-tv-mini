@@ -139,7 +139,7 @@ export function WatchPage({ catalogue }: { catalogue: Catalogue }) {
             >
               {variants.map((v) => (
                 <option key={v.episode_id} value={v.episode_id}>
-                  {v.language.toUpperCase()} - {v.content_group}
+                  {v.languages.map(l => l.toUpperCase()).join(', ')} • {v.content_group}
                 </option>
               ))}
             </select>
