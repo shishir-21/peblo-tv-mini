@@ -2,6 +2,8 @@ import pytest
 from pathlib import Path
 from app.storage.local import LocalStorage
 from app.storage.cloudinary import CloudinaryStorage
+from app.storage.base import StorageError
+import cloudinary
 import os
 import importlib
 
@@ -38,6 +40,85 @@ def test_cloudinary_public_id_generation():
     # Raw key preserves extension
     raw_id = storage._get_public_id("catalogue.json", resource_type="raw")
     assert raw_id == "peblo-tv/catalogue.json"
+
+
+def test_cloudinary_image_upload_and_url_use_image_resource_type(tmp_path, monkeypatch):
+    storage = CloudinaryStorage("test_cloud", "test_key", "test_secret")
+    image_path = tmp_path / "poster.jpg"
+    image_path.write_bytes(b"image")
+    upload_calls = []
+
+    monkeypatch.setattr(
+        "app.storage.cloudinary.cloudinary.uploader.upload",
+        lambda path, **kwargs: upload_calls.append((path, kwargs)),
+    )
+
+    storage.save(image_path, "artwork/episode-1/poster.jpg")
+
+    assert upload_calls == [(str(image_path), {
+        "public_id": "peblo-tv/artwork/episode-1/poster",
+        "resource_type": "image",
+        "overwrite": True,
+    })]
+    assert "/image/upload/" in storage.get_url("artwork/episode-1/poster.jpg")
+    assert storage.get_url("artwork/episode-1/poster.jpg").endswith(
+        "/peblo-tv/artwork/episode-1/poster"
+    )
+
+
+def test_cloudinary_raw_catalogue_upload_and_url_preserve_json_extension(tmp_path, monkeypatch):
+    storage = CloudinaryStorage("test_cloud", "test_key", "test_secret")
+    catalogue_path = tmp_path / "catalogue.json"
+    catalogue_path.write_text("{}")
+    upload_calls = []
+
+    monkeypatch.setattr(
+        "app.storage.cloudinary.cloudinary.uploader.upload",
+        lambda path, **kwargs: upload_calls.append((path, kwargs)),
+    )
+
+    storage.save(catalogue_path, "catalogue.json", resource_type="raw")
+
+    assert upload_calls == [(str(catalogue_path), {
+        "public_id": "peblo-tv/catalogue.json",
+        "resource_type": "raw",
+        "overwrite": True,
+    })]
+    url = storage.get_url("catalogue.json", resource_type="raw")
+    assert "/raw/upload/" in url
+    assert url.endswith("/peblo-tv/catalogue.json")
+
+
+def test_cloudinary_raw_exists_uses_raw_resource_type(monkeypatch):
+    storage = CloudinaryStorage("test_cloud", "test_key", "test_secret")
+    resource_calls = []
+
+    monkeypatch.setattr(
+        "app.storage.cloudinary.cloudinary.api.resource",
+        lambda public_id, **kwargs: resource_calls.append((public_id, kwargs)),
+    )
+
+    assert storage.exists("catalogue.json", resource_type="raw") is True
+    assert resource_calls == [(
+        "peblo-tv/catalogue.json", {"resource_type": "raw"}
+    )]
+
+
+def test_cloudinary_upload_failure_is_not_silenced(tmp_path, monkeypatch):
+    storage = CloudinaryStorage("test_cloud", "test_key", "test_secret")
+    image_path = tmp_path / "poster.jpg"
+    image_path.write_bytes(b"image")
+
+    def raise_cloudinary_error(*args, **kwargs):
+        raise cloudinary.exceptions.Error("provider unavailable")
+
+    monkeypatch.setattr(
+        "app.storage.cloudinary.cloudinary.uploader.upload",
+        raise_cloudinary_error,
+    )
+
+    with pytest.raises(StorageError, match="Cloudinary upload failed.*provider unavailable"):
+        storage.save(image_path, "artwork/episode-1/poster.jpg")
 
 def test_storage_factory_local(monkeypatch):
     from app.core.config import settings

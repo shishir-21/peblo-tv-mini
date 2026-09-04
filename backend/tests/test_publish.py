@@ -1,8 +1,73 @@
-def test_publish_validation_failure(client):
-    # Empty DB, should fail or succeed?
-    # If no shows, valid? Let's check.
+import uuid
+
+import pytest
+
+from app.models import PublishRun
+from app.storage import StorageError
+from app.services import publish
+
+
+class MockCloudinaryStorage:
+    def __init__(self, failure: Exception | None = None):
+        self.failure = failure
+        self.save_calls = []
+
+    def save(self, file_path, storage_key, resource_type="image"):
+        self.save_calls.append((file_path, storage_key, resource_type))
+        if self.failure:
+            raise self.failure
+        return storage_key
+
+    def get_url(self, storage_key, resource_type="image"):
+        return f"https://example.invalid/{resource_type}/{storage_key}"
+
+
+def _unique_catalogue_hash(*args):
+    return uuid.uuid4().hex * 2
+
+
+def test_publish_uses_mocked_cloudinary_for_raw_catalogues(db_session, monkeypatch):
+    storage = MockCloudinaryStorage()
+    monkeypatch.setattr(publish, "media_storage", storage)
+    monkeypatch.setattr(publish, "calculate_catalogue_hash", _unique_catalogue_hash)
+
+    run = publish.execute_publish(db_session)
+
+    assert run.status == "completed"
+    assert [(key, resource_type) for _, key, resource_type in storage.save_calls] == [
+        ("catalogue.json", "raw"),
+        (f"catalogues/catalogue-{run.id}.json", "raw"),
+    ]
+    assert all(path.suffix == ".json" and not path.exists() for path, _, _ in storage.save_calls)
+
+
+def test_cloudinary_failure_marks_publish_run_failed_with_useful_error(db_session, monkeypatch):
+    storage = MockCloudinaryStorage(StorageError("Cloudinary upload failed for catalogue.json (raw): denied"))
+    monkeypatch.setattr(publish, "media_storage", storage)
+    monkeypatch.setattr(publish, "calculate_catalogue_hash", _unique_catalogue_hash)
+
+    with pytest.raises(StorageError, match="Cloudinary upload failed.*denied"):
+        publish.execute_publish(db_session)
+
+    failed_run = db_session.query(PublishRun).filter_by(status="failed").order_by(
+        PublishRun.started_at.desc()
+    ).first()
+    assert failed_run is not None
+    assert failed_run.error_message == "Cloudinary upload failed for catalogue.json (raw): denied"
+
+
+def test_cloudinary_failure_returns_useful_publish_response(client, monkeypatch):
+    storage = MockCloudinaryStorage(StorageError("Cloudinary upload failed for catalogue.json (raw): denied"))
+    monkeypatch.setattr(publish, "media_storage", storage)
+    monkeypatch.setattr(publish, "calculate_catalogue_hash", _unique_catalogue_hash)
+
     response = client.post("/api/v1/publish")
-    assert response.status_code in [200, 201, 400] # Depends on validation logic for empty catalogue
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == (
+        "Catalogue publishing failed: "
+        "Cloudinary upload failed for catalogue.json (raw): denied"
+    )
 
 def test_publish_workflow(client):
     # Create valid content

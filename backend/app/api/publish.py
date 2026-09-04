@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db, get_admin_user
 from app.models import User, PublishRun
 from app.services.publish import execute_publish
+from app.storage import StorageError
 from sqlalchemy import select
 from typing import List
 from app.schemas.publish_run import PublishRunOut
@@ -27,10 +28,17 @@ def publish_catalogue(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user),
 ):
-    publish_run = execute_publish(
-        db=db,
-        triggered_by=current_user.id,
-    )
+    try:
+        publish_run = execute_publish(
+            db=db,
+            triggered_by=current_user.id,
+        )
+    except StorageError as exc:
+        # execute_publish records this same message on the failed PublishRun.
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Catalogue publishing failed: {exc}",
+        ) from exc
 
     return {
         "id": str(publish_run.id),
@@ -63,4 +71,3 @@ def get_publish_run(
     if not run:
         raise HTTPException(status_code=404, detail="Publish run not found")
     return run
-    

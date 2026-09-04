@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from app.storage.base import Storage
+from app.storage.base import Storage, StorageError
 from app.storage.local import LocalStorage
 from app.core.config import settings
 
@@ -26,6 +26,7 @@ storage = _init_storage()
 
 __all__ = [
     "Storage",
+    "StorageError",
     "LocalStorage",
     "storage",
 ]
