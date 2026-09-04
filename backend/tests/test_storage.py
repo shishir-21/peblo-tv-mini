@@ -23,8 +23,21 @@ def test_cloudinary_storage_initialization():
         api_key="test_key",
         api_secret="test_secret"
     )
-    # Using mock assertions here isn't strictly necessary for initialization
     assert storage is not None
+
+def test_cloudinary_public_id_generation():
+    storage = CloudinaryStorage(
+        cloud_name="test_cloud",
+        api_key="test_key",
+        api_secret="test_secret"
+    )
+    # Image key removes extension
+    img_id = storage._get_public_id("artwork/ep_0001/poster.jpg", resource_type="image")
+    assert img_id == "peblo-tv/artwork/ep_0001/poster"
+    
+    # Raw key preserves extension
+    raw_id = storage._get_public_id("catalogue.json", resource_type="raw")
+    assert raw_id == "peblo-tv/catalogue.json"
 
 def test_storage_factory_local(monkeypatch):
     from app.core.config import settings

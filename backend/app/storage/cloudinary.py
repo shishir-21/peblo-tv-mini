@@ -13,12 +13,15 @@ class CloudinaryStorage(Storage):
             secure=True
         )
 
-    def _get_public_id(self, storage_key: str) -> str:
+    def _get_public_id(self, storage_key: str, resource_type: str = "image") -> str:
         p = Path(storage_key)
-        return f"peblo-tv/{p.parent}/{p.stem}".replace("\\", "/")
+        filename = p.name if resource_type == "raw" else p.stem
+        # if p.parent is '.', we shouldn't add a trailing slash before filename
+        parent_path = f"{p.parent}/" if str(p.parent) != "." else ""
+        return f"peblo-tv/{parent_path}{filename}".replace("\\", "/")
 
     def save(self, file_path: Path, storage_key: str, resource_type: str = "image") -> str:
-        public_id = self._get_public_id(storage_key)
+        public_id = self._get_public_id(storage_key, resource_type=resource_type)
         cloudinary.uploader.upload(
             str(file_path),
             public_id=public_id,
@@ -31,7 +34,7 @@ class CloudinaryStorage(Storage):
         return Path(storage_key)
 
     def exists(self, storage_key: str) -> bool:
-        public_id = self._get_public_id(storage_key)
+        public_id = self._get_public_id(storage_key, resource_type="image")
         try:
             # We assume image resource type for exists checks unless otherwise known.
             # Using search or specific resource_type if needed.
@@ -43,6 +46,6 @@ class CloudinaryStorage(Storage):
             return False
 
     def get_url(self, storage_key: str, resource_type: str = "image") -> str:
-        public_id = self._get_public_id(storage_key)
+        public_id = self._get_public_id(storage_key, resource_type=resource_type)
         url, _ = cloudinary.utils.cloudinary_url(public_id, resource_type=resource_type)
         return url
