@@ -857,7 +857,11 @@
     "language": "en",
     "content_group": "discover-india-with-moti-s01e04",
     "status": "published",
-    "artwork_available": []
+    "artwork_available": [
+      "poster",
+      "banner",
+      "thumbnail"
+    ]
   },
   {
     "episode_id": "ep_0037",
@@ -2196,6 +2200,8 @@
     "content_group": "motis-many-lives-s00e01",
     "status": "published",
     "artwork_available": [
+      "poster",
+      "banner",
       "thumbnail"
     ]
   },
@@ -2218,6 +2224,8 @@
     "content_group": "tiny-tales-banyan-dadi-s00e01",
     "status": "published",
     "artwork_available": [
+      "poster",
+      "banner",
       "thumbnail"
     ]
   }
