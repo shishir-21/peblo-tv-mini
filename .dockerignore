@@ -1,0 +1,33 @@
+# Git
+.git/
+.gitignore
+
+# Environments
+.venv/
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+.npm/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+
+# Render/Local Storage
+backend/storage/
+storage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
