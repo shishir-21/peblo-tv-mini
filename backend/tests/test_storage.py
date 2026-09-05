@@ -1,10 +1,8 @@
 import pytest
-from pathlib import Path
 from app.storage.local import LocalStorage
 from app.storage.cloudinary import CloudinaryStorage
 from app.storage.base import StorageError
 import cloudinary
-import os
 import importlib
 
 def test_local_storage(tmp_path):

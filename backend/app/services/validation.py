@@ -1,9 +1,9 @@
 from collections import defaultdict
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
-from typing import Dict, Any, List
+from typing import Dict, Any
 
-from app.models import Show, Season, Episode, Artwork
+from app.models import Season, Episode
 
 
 def validate_content(db: Session) -> Dict[str, Any]:
@@ -132,7 +132,7 @@ def validate_content(db: Session) -> Dict[str, Any]:
         if len(ep_ids) > 1:
             errors.append({
                 "code": "DUPLICATE_LANGUAGE_VARIANT",
-                "message": f"Multiple episodes found for same content_group and language",
+                "message": "Multiple episodes found for same content_group and language",
                 "show_id": str(key[0]),
                 "content_group": key[1]
             })

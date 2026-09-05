@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from app.storage.base import Storage, StorageError
 from app.storage.local import LocalStorage
