@@ -5,6 +5,7 @@ import { Home } from './components/Home';
 import { SearchPage } from './components/SearchPage';
 import { ShowDetails } from './components/ShowDetails';
 import { WatchPage } from './components/WatchPage';
+import { ShowsPage } from './components/ShowsPage';
 import { Search } from 'lucide-react';
 import './index.css';
 
@@ -66,10 +67,10 @@ function App() {
         <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home catalogue={catalogue} />} />
+            <Route path="/shows" element={<ShowsPage catalogue={catalogue} />} />
             <Route path="/search" element={<SearchPage catalogue={catalogue} />} />
             <Route path="/shows/:slug" element={<ShowDetails catalogue={catalogue} />} />
             <Route path="/watch/:id" element={<WatchPage catalogue={catalogue} />} />
-            {/* Additional routes will go here */}
           </Routes>
         </main>
         
