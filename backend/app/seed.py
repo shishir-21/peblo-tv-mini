@@ -11,7 +11,18 @@ from app.services.artwork import ARTWORK_SPECS, validate_artwork
 from app.storage import storage as media_storage
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+def _find_project_dir(module_file: Path) -> Path:
+    """Find the project directory that contains the seed data."""
+    for directory in module_file.resolve().parents:
+        if (directory / "seed_data" / "seed_shows.json").is_file():
+            return directory
+
+    # In the container, ``/app`` is the project directory even before the
+    # seed file is opened, so retain that useful path in an error message.
+    return module_file.resolve().parents[1]
+
+
+BASE_DIR = _find_project_dir(Path(__file__))
 SEED_FILE = BASE_DIR / "seed_data" / "seed_shows.json"
 STORAGE_DIR = BASE_DIR / "storage"
 

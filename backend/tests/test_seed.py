@@ -20,6 +20,16 @@ class RecordingStorage:
         return storage_key
 
 
+def test_project_dir_resolves_seed_data_from_container_workdir(tmp_path):
+    project_dir = tmp_path / "app"
+    module_file = project_dir / "app" / "seed.py"
+    seed_file = project_dir / "seed_data" / "seed_shows.json"
+    seed_file.parent.mkdir(parents=True)
+    seed_file.write_text("[]")
+
+    assert seed._find_project_dir(module_file) == project_dir
+
+
 def test_all_published_seed_records_declare_required_artwork():
     required_artwork = {"poster", "banner", "thumbnail"}
 
