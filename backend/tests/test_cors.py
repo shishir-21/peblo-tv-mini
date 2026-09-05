@@ -14,7 +14,7 @@ def test_cors_preflight():
     assert response.headers.get("access-control-allow-origin") == "https://peblo-tv-cms.vercel.app"
     assert "authorization" in response.headers.get("access-control-allow-headers", "").lower() or "*" in response.headers.get("access-control-allow-headers", "")
     
-def test_cors_actual_request():
+def test_cors_actual_request(client):
     headers = {
         "Origin": "http://localhost:5173"
     }
