@@ -8,6 +8,23 @@ export function WatchPage({ catalogue }: { catalogue: Catalogue }) {
   const navigate = useNavigate();
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [fallbackMessage, setFallbackMessage] = useState('');
+
+  const LANGUAGE_NAMES: Record<string, string> = {
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+    ja: 'Japanese',
+    hi: 'Hindi',
+    ko: 'Korean',
+    de: 'German',
+    it: 'Italian',
+    pt: 'Portuguese',
+    zh: 'Chinese',
+    ru: 'Russian'
+  };
+  const getLangName = (code: string) => LANGUAGE_NAMES[code.toLowerCase()] || code.toUpperCase();
 
   // Find the episode and its siblings (variants)
   const { currentEpisode, variants, showTitle } = useMemo(() => {
@@ -24,6 +41,20 @@ export function WatchPage({ catalogue }: { catalogue: Catalogue }) {
     return { currentEpisode: null, variants: [], showTitle: '' };
   }, [catalogue, id]);
 
+  React.useEffect(() => {
+    if (currentEpisode && currentEpisode.languages && currentEpisode.languages.length > 0) {
+      if (selectedLanguage && !currentEpisode.languages.includes(selectedLanguage)) {
+         setFallbackMessage(`${getLangName(selectedLanguage)} version is not available for this episode.`);
+         setSelectedLanguage(currentEpisode.languages[0]);
+         
+         const timer = setTimeout(() => setFallbackMessage(''), 5000);
+         return () => clearTimeout(timer);
+      } else if (!selectedLanguage) {
+         setSelectedLanguage(currentEpisode.languages[0]);
+      }
+    }
+  }, [currentEpisode, selectedLanguage]);
+
   if (!currentEpisode) {
     return <Navigate to="/search" replace />;
   }
@@ -38,6 +69,18 @@ export function WatchPage({ catalogue }: { catalogue: Catalogue }) {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      {fallbackMessage && (
+        <div style={{ 
+          backgroundColor: 'rgba(255, 90, 95, 0.1)', 
+          color: 'var(--color-primary)', 
+          padding: '1rem', 
+          borderRadius: 'var(--radius-sm)',
+          marginBottom: '1rem',
+          border: '1px solid rgba(255, 90, 95, 0.2)'
+        }}>
+          {fallbackMessage}
+        </div>
+      )}
       <button 
         onClick={() => navigate(-1)}
         style={{ 
@@ -74,6 +117,7 @@ export function WatchPage({ catalogue }: { catalogue: Catalogue }) {
           <div style={{ textAlign: 'center' }}>
             <h2 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>Video playback coming soon!</h2>
             <p style={{ color: 'var(--color-text-muted)' }}>This is a mock player for {currentEpisode.title}</p>
+            {selectedLanguage && <p style={{ color: 'var(--color-text-muted)' }}>Audio Track: {getLangName(selectedLanguage)}</p>}
           </div>
         ) : (
           <div 
@@ -119,32 +163,61 @@ export function WatchPage({ catalogue }: { catalogue: Catalogue }) {
           </p>
         </div>
 
-        {/* Variants Selector */}
-        {variants.length > 1 && (
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', minWidth: '250px' }}>
-            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>Available Versions</h3>
-            <select 
-              value={currentEpisode.episode_id}
-              onChange={handleVariantChange}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: 'var(--color-background)',
-                color: 'white',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-sm)',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {variants.map((v) => (
-                <option key={v.episode_id} value={v.episode_id}>
-                  {v.languages.map(l => l.toUpperCase()).join(', ')} • {v.content_group}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          {/* Language Selector */}
+          {currentEpisode.languages && currentEpisode.languages.length > 1 && (
+            <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', minWidth: '200px' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>Audio Language</h3>
+              <select 
+                value={selectedLanguage || currentEpisode.languages[0]}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'white',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {currentEpisode.languages.map(lang => (
+                  <option key={lang} value={lang}>
+                    {getLangName(lang)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Variants Selector */}
+          {variants.length > 1 && (
+            <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', minWidth: '200px' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>Available Versions</h3>
+              <select 
+                value={currentEpisode.episode_id}
+                onChange={handleVariantChange}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  backgroundColor: 'var(--color-background)',
+                  color: 'white',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {variants.map((v) => (
+                  <option key={v.episode_id} value={v.episode_id}>
+                    {v.content_group}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
