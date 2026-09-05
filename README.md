@@ -1,104 +1,90 @@
-# Peblo TV Mini
+Update ONLY the root README.md for the current Peblo TV Mini project.
 
-Full-stack take-home challenge for Peblo — a CMS for children's content with catalogue publishing and a public viewer.
+Keep the existing useful sections, but bring the documentation up to date with the current implementation.
 
-## Architecture
+Include:
 
-```
-CMS (React) → FastAPI → PostgreSQL
-                ↓
-           Object Storage
-                ↓
-          catalogue.json
-                ↓
-         Viewer (React)
-```
+1. Project overview
+   - Peblo TV Mini is a full-stack children's content platform.
+   - CMS for managing content.
+   - Public Viewer for browsing and watching catalogue content.
+   - Catalogue publishing flow.
 
-## Prerequisites
+2. Production URLs
+   Include:
+   Backend: https://peblo-tv-mini-fvu7.onrender.com
+   API docs: https://peblo-tv-mini-fvu7.onrender.com/docs
+   CMS: https://peblo-tv-cms.vercel.app
+   Viewer: https://viewer-six-kappa.vercel.app
 
-- Python 3.11+
-- Docker (for PostgreSQL)
-- Node.js 20+ (for frontend, when added)
+3. Architecture
+   Keep/update the architecture diagram:
+   CMS (React) → FastAPI → PostgreSQL
+                    ↓
+               Cloudinary
+                    ↓
+              catalogue.json
+                    ↓
+             Viewer (React)
 
-## Quick Start
+4. Tech stack
+   - Backend: FastAPI, SQLAlchemy, PostgreSQL, Alembic, JWT, Argon2
+   - CMS: React, TypeScript, Vite
+   - Viewer: React, TypeScript, Vite
+   - Storage: local filesystem for development, Cloudinary for production
+   - CI: GitHub Actions
+   - Deployment: Render for backend, Vercel for CMS and Viewer
 
-### 1. Local Development (Dockerized)
+5. Local development
+   Keep the existing Docker and manual development instructions, but make them accurate.
+   Mention:
+   - Backend: http://localhost:8000
+   - API docs: http://localhost:8000/docs
+   - CMS: http://localhost:5173
+   - Viewer: http://localhost:5174
 
-The easiest way to run the entire stack locally is using Docker Compose.
+6. Viewer features currently implemented
+   - Home page
+   - Shows listing page
+   - Show detail pages
+   - Episode/watch page
+   - Search page
+   - Audio language selector for episodes with multiple languages
+   - Safe fallback when an unavailable language is selected
+   - Catalogue loaded from published catalogue.json
+   - Responsive show-card grid
+   - Shows route: /shows
+   - Show detail route: /shows/:slug
+   - Watch route: /watch/:id
 
-```bash
-# Start DB, Backend, CMS, and Viewer
-docker compose up -d --build
-```
+7. CMS/backend features currently implemented
+   - Authentication
+   - Editor/admin roles
+   - JWT authentication
+   - Current-user endpoint
+   - Episode artwork upload
+   - Catalogue validation
+   - Catalogue publishing
+   - Cloudinary storage
+   - Seed data
 
-- **Backend API:** `http://localhost:8000`
-- **CMS Frontend:** `http://localhost:5173`
-- **Viewer Frontend:** `http://localhost:5174`
+8. CI
+   Document that GitHub Actions runs:
+   - Backend Ruff lint
+   - Backend tests
+   - Viewer build
+   - CMS build
+   - Docker build
 
-To seed the database with an admin user (`admin@example.com` / `changeme123`) and sample data:
-```bash
-# Wait for the backend container to start, then run:
-docker compose exec backend python -m app.scripts.create_admin admin@example.com changeme123
-docker compose exec backend python -m app.seed
-```
+9. Development status
+   Do NOT say frontend is "planned" or "in progress".
+   Say that the backend foundation, authentication, publishing, storage, CMS, Viewer, CI, and Shows browsing flow are implemented.
+   Mention that additional Viewer features such as Movies are still being developed.
 
-### 2. Manual Development (Without Docker for Apps)
-
-If you prefer to run services manually for faster hot-reloading:
-
-```bash
-# Start PostgreSQL only
-docker compose up -d db
-
-# Terminal 1: Backend
-cd backend
-python -m venv .venv
-# activate venv (.venv/Scripts/activate or source .venv/bin/activate)
-pip install -r requirements.txt -r requirements-dev.txt
-alembic upgrade head
-python -m app.seed
-python -m app.scripts.create_admin admin@example.com changeme123
-uvicorn app.main:app --reload --port 8000
-
-# Terminal 2: CMS
-cd cms
-npm install
-npm run dev
-
-# Terminal 3: Viewer
-cd viewer
-npm install
-npm run dev
-```
-
-API docs: http://localhost:8000/docs
-
-### 3. Environment variables
-
-Copy `.env.example` to `.env` and adjust values as needed.
-
-For the production API on Render, set `CORS_ORIGINS` to a comma-separated list
-that includes the deployed CMS origin, for example
-`https://peblo-tv-cms.vercel.app`. Redeploy the Render service after changing
-the variable so browser preflight requests receive the CORS headers.
-
-## Current API Endpoints
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/health` | — | Health check |
-| POST | `/api/v1/auth/register` | — | Register editor |
-| POST | `/api/v1/auth/login` | — | Login |
-| GET | `/api/v1/auth/me` | Bearer | Current user |
-| POST | `/api/v1/episodes/{id}/artwork` | Editor+ | Upload artwork |
-| POST | `/api/v1/publish` | Admin | Publish catalogue |
-
-## Stack
-
-- **Backend:** FastAPI, SQLAlchemy, PostgreSQL, Alembic, JWT, Argon2
-- **Frontend:** React, TypeScript, Vite (planned)
-- **Storage:** Local filesystem (dev), Cloudinary (production)
-
-## Development Status
-
-See git log for feature history. Backend foundation (models, auth, artwork, publishing) is in place. CMS CRUD APIs, frontend, and comprehensive tests are in progress.
+Important:
+- Do not modify any source code.
+- Do not modify package files.
+- Do not modify configuration files.
+- Do not invent API endpoints or features that are not present in the repository.
+- Only modify README.md.
+- Keep the README professional and concise.
