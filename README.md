@@ -17,6 +17,8 @@ Include:
    CMS: https://peblo-tv-cms.vercel.app
    Viewer: https://viewer-six-kappa.vercel.app
 
+
+
 ## Test Credentials
 
 ### Editor Account
@@ -30,6 +32,9 @@ Include:
 - Password: `Abc@123`
 
 These credentials are provided for testing the deployed CMS and authentication flow.
+
+
+
 
 3. Architecture
    Keep/update the architecture diagram:
