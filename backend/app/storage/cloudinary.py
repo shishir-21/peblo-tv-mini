@@ -40,6 +40,7 @@ class CloudinaryStorage(Storage):
                 public_id=public_id,
                 resource_type=resource_type,
                 overwrite=True,
+                invalidate=True,
             )
         except cloudinary.exceptions.Error as exc:
             raise StorageError(

@@ -48,20 +48,22 @@ export const STORAGE_URL = import.meta.env.VITE_STORAGE_URL || '/storage';
 const CATALOGUE_URL = import.meta.env.VITE_CATALOGUE_URL || `${STORAGE_URL}/catalogue.json`;
 
 export async function fetchCatalogue(): Promise<Catalogue> {
-  const response = await fetch(CATALOGUE_URL);
+  const response = await fetch(CATALOGUE_URL, {
+    cache: "no-store",
+  });
   if (!response.ok) {
     throw new Error('Failed to fetch catalogue. The catalogue might not be published yet.');
   }
   const rawData = await response.json();
-  
+
   if (rawData.shows) {
     // Already matches expected schema
     return rawData;
   }
-  
+
   // Transform the sections-based catalogue into the expected legacy schema
   const showsMap = new Map<string, Show>();
-  
+
   const sections = rawData.sections || {};
   for (const [sectionName, entries] of Object.entries(sections)) {
     for (const entry of (entries as any[])) {
@@ -76,10 +78,10 @@ export async function fetchCatalogue(): Promise<Catalogue> {
           seasons: [],
         });
       }
-      
+
       const show = showsMap.get(entry.slug)!;
       const seasonId = `${entry.slug}-s${entry.season_number}`;
-      
+
       let season = show.seasons.find(s => s.season_number === entry.season_number);
       if (!season) {
         season = {
@@ -89,12 +91,12 @@ export async function fetchCatalogue(): Promise<Catalogue> {
         };
         show.seasons.push(season);
       }
-      
+
       const artwork: any = {};
       if (entry.artwork?.poster) artwork.poster = entry.artwork.poster.url || entry.artwork.poster.storage_key;
       if (entry.artwork?.banner) artwork.banner = entry.artwork.banner.url || entry.artwork.banner.storage_key;
       if (entry.artwork?.thumbnail) artwork.thumbnail = entry.artwork.thumbnail.url || entry.artwork.thumbnail.storage_key;
-      
+
       const episodeId = entry.content_group;
       if (!season.episodes.find(e => e.episode_id === episodeId)) {
         season.episodes.push({
@@ -110,7 +112,7 @@ export async function fetchCatalogue(): Promise<Catalogue> {
       }
     }
   }
-  
+
   // Sort seasons and episodes
   const shows = Array.from(showsMap.values());
   for (const show of shows) {
@@ -119,7 +121,7 @@ export async function fetchCatalogue(): Promise<Catalogue> {
       season.episodes.sort((a, b) => a.episode_number - b.episode_number);
     }
   }
-  
+
   return {
     metadata: {
       generated_at: new Date().toISOString(),
