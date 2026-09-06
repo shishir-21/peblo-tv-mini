@@ -57,6 +57,7 @@ def test_cloudinary_image_upload_and_url_use_image_resource_type(tmp_path, monke
         "public_id": "peblo-tv/artwork/episode-1/poster",
         "resource_type": "image",
         "overwrite": True,
+        "invalidate": True,
     })]
     assert "/image/upload/" in storage.get_url("artwork/episode-1/poster.jpg")
     assert storage.get_url("artwork/episode-1/poster.jpg").endswith(
@@ -81,6 +82,7 @@ def test_cloudinary_raw_catalogue_upload_and_url_preserve_json_extension(tmp_pat
         "public_id": "peblo-tv/catalogue.json",
         "resource_type": "raw",
         "overwrite": True,
+        "invalidate": True,
     })]
     url = storage.get_url("catalogue.json", resource_type="raw")
     assert "/raw/upload/" in url
