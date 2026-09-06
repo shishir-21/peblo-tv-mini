@@ -224,12 +224,17 @@ def execute_publish(
         episodes_count = len(entries)
 
         if latest_run and latest_run.catalogue_hash == catalogue_hash:
+            persist_catalogue(
+                catalogue=catalogue,
+                storage_key=f"catalogues/catalogue-{publish_run.id}.json",
+            )
+
             publish_run.status = "completed"
             publish_run.completed_at = datetime.now(timezone.utc)
             publish_run.shows_count = shows_count
             publish_run.episodes_count = episodes_count
             publish_run.catalogue_hash = catalogue_hash
-            
+
             db.commit()
             db.refresh(publish_run)
             return publish_run
