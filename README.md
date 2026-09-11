@@ -1,8 +1,3 @@
-Update ONLY the root README.md for the current Peblo TV Mini project.
-
-Keep the existing useful sections, but bring the documentation up to date with the current implementation.
-
-Include:
 
 1. Project overview
    - Peblo TV Mini is a full-stack children's content platform.
