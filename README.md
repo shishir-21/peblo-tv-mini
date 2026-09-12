@@ -80,7 +80,7 @@ Content edited in the CMS is not immediately exposed to the public Viewer.
 The publishing flow creates a catalogue snapshot containing published content. The Viewer consumes this published catalogue rather than querying CMS/admin endpoints directly.
 
 This creates a clear boundary between:
-
+```text
 Content Editing
       ↓
 Validation
@@ -90,6 +90,8 @@ Publishing
 Published Catalogue
       ↓
 Public Viewer
+```
+```text
 Production
 Live Applications
 Service	URL
@@ -98,8 +100,9 @@ API Documentation	https://peblo-tv-mini-fvu7.onrender.com/docs
 CMS	https://peblo-tv-cms.vercel.app
 Viewer	https://viewer-six-kappa.vercel.app
 GitHub Repository	https://github.com/shishir-21/peblo-tv-mini
-Test Credentials
+```
 
+Test Credentials
 The following accounts are provided for testing the deployed CMS and authentication flow.
 
 Editor Account
