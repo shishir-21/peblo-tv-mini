@@ -53,6 +53,7 @@ The CMS allows authenticated users to:
 
 The application supports two roles:
 
+```text
 Editor
   └── Content CRUD
 
@@ -60,7 +61,7 @@ Admin
   ├── Content CRUD
   └── Catalogue Publishing
 Public Viewer
-
+```
 The Viewer is a read-only public application that consumes the published catalogue.
 
 Users can:
@@ -112,7 +113,7 @@ Email: mahatoshishir6@gmail.com
 Password: Abc@123
 
 Admin permissions include content management and catalogue publishing.
-
+```text
 Architecture
                          ┌───────────────────────┐
                          │       CMS (React)     │
@@ -155,7 +156,7 @@ Architecture
                                       └──────────────────┘
 
 The Viewer does not depend on the CMS UI or administrative APIs. It consumes the published catalogue.
-
+```
 Tech Stack
 Backend
 Python
@@ -183,7 +184,7 @@ Development:
 Local filesystem
 
 Production:
-
+```text
 Cloudinary
 CI
 GitHub Actions
@@ -237,7 +238,7 @@ Current-user endpoint.
 Password hashing using Argon2.
 Role-based access control.
 Roles
-
+```
 The application supports:
 
 Editor
@@ -496,13 +497,13 @@ This avoids exposing a partially written catalogue.
 Failure During Publishing
 
 If the process dies before a new publish run is completed:
-
+```text
 Previous completed catalogue
           │
           │ remains available
           ▼
        Viewer
-
+```
 The failed operation does not replace the previous completed catalogue with a partially generated file.
 
 A failed publish run can be recorded as failed, while the last successfully completed catalogue remains the public version.
@@ -514,11 +515,11 @@ Storage Abstraction
 Storage operations are separated from business logic through a storage abstraction.
 
 The current storage implementations are:
-
+```text
 Storage
 ├── LocalStorage
 └── CloudinaryStorage
-
+```
 Development uses the local filesystem.
 
 Production uses Cloudinary.
@@ -641,7 +642,7 @@ Docker
 This provides automated checks for backend correctness, frontend compilation, and container buildability.
 
 Deployment
-
+```text
 The application is deployed as separate services:
 
                  GitHub
@@ -655,7 +656,7 @@ The application is deployed as separate services:
     Backend        CMS        Viewer
 
 The backend runs on Render.
-
+```
 The CMS and Viewer are deployed independently on Vercel.
 
 The production Viewer consumes the published catalogue through the backend catalogue delivery flow.
