@@ -1,866 +1,333 @@
 # Peblo TV Mini
 
-Peblo TV Mini is a full-stack children's content platform built for the Peblo Full Stack Development Challenge.
+A full-stack children's content platform built for the Peblo Full Stack Development Challenge.
 
-The project provides two main applications:
+The project has two React apps:
 
-- **CMS** — an authenticated content management system for editors and admins.
-- **Viewer** — a public-facing React application for browsing the published catalogue.
+* **CMS** — for editors and admins to manage content.
+* **Viewer** — public app for browsing the published catalogue.
 
-Content is created and managed in the CMS, stored in PostgreSQL, validated before publishing, and exposed to the public Viewer through a published catalogue snapshot.
+Content is stored in PostgreSQL, validated before publishing, and then published as an immutable catalogue snapshot for the Viewer.
 
----
+## Live Demo
 
-## Table of Contents
+| Service  | URL                                          |
+| -------- | -------------------------------------------- |
+| Backend  | https://peblo-tv-mini-fvu7.onrender.com      |
+| API Docs | https://peblo-tv-mini-fvu7.onrender.com/docs |
+| CMS      | https://peblo-tv-cms.vercel.app              |
+| Viewer   | https://viewer-six-kappa.vercel.app          |
+| GitHub   | https://github.com/shishir-21/peblo-tv-mini  |
 
-- [Project Overview](#project-overview)
-- [Production](#production)
-- [Test Credentials](#test-credentials)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Features](#features)
-- [Local Development](#local-development)
-- [Environment Variables](#environment-variables)
-- [Catalogue Publishing Flow](#catalogue-publishing-flow)
-- [Engineering Decisions](#engineering-decisions)
-- [Pipeline and CI](#pipeline-and-ci)
-- [Health and Operability](#health-and-operability)
-- [Testing](#testing)
-- [Security](#security)
-- [What Was Left Out](#what-was-left-out)
-- [AI Usage](#ai-usage)
-- [Development Status](#development-status)
-- [Time Spent](#time-spent)
+## Test Accounts
 
+**Editor**
 
-# Project Overview
+* Email: `editor@peblo.tv`
+* Password: `peblo@123`
 
-Peblo TV Mini is a full-stack children's content platform consisting of a CMS, backend API, storage layer, publishing pipeline, and public Viewer.
+**Admin**
 
-The platform is designed around a simple separation between **content management** and **public content consumption**.
+* Email: `mahatoshishir6@gmail.com`
+* Password: `Abc@123`
 
-### CMS
+Editor can manage content. Admin can also publish the catalogue.
 
-The CMS allows authenticated users to:
-
-- Create and manage shows.
-- Manage seasons.
-- Manage episodes.
-- Upload episode artwork.
-- Validate catalogue content.
-- Publish the catalogue.
-
-The application supports two roles:
+## Architecture
 
 ```text
-Editor
-  └── Content CRUD
-
-Admin
-  ├── Content CRUD
-  └── Catalogue Publishing
-Public Viewer
-```
-The Viewer is a read-only public application that consumes the published catalogue.
-
-Users can:
-
-Browse shows.
-Search the catalogue.
-Open show details.
-Browse seasons and episodes.
-Open an episode/watch page.
-Select an available audio language.
-Fall back safely when an unavailable language is selected.
-Catalogue Publishing
-
-Content edited in the CMS is not immediately exposed to the public Viewer.
-
-The publishing flow creates a catalogue snapshot containing published content. The Viewer consumes this published catalogue rather than querying CMS/admin endpoints directly.
-
-This creates a clear boundary between:
-```text
-Content Editing
-      ↓
+CMS (React)
+    ↓
+FastAPI API
+    ↓
+PostgreSQL + Storage
+    ↓
 Validation
-      ↓
-Publishing
-      ↓
-Published Catalogue
-      ↓
-Public Viewer
-```
-
-Production
-Live Applications
-Service	URL
-Backend	https://peblo-tv-mini-fvu7.onrender.com
-API Documentation	https://peblo-tv-mini-fvu7.onrender.com/docs
-CMS	https://peblo-tv-cms.vercel.app
-Viewer	https://viewer-six-kappa.vercel.app
-GitHub Repository	https://github.com/shishir-21/peblo-tv-mini
-
-
-Test Credentials
-The following accounts are provided for testing the deployed CMS and authentication flow.
-
-Editor Account
-Email: editor@peblo.tv
-Password: peblo@123
-
-Editor permissions include content management operations.
-
-Admin Account
-Email: mahatoshishir6@gmail.com
-Password: Abc@123
-
-Admin permissions include content management and catalogue publishing.
-```text
-Architecture
-                         ┌───────────────────────┐
-                         │       CMS (React)     │
-                         │                       │
-                         │  Editor / Admin UI    │
-                         └───────────┬───────────┘
-                                     │
-                                     │ HTTP / JWT
-                                     ▼
-                         ┌───────────────────────┐
-                         │    FastAPI Backend    │
-                         │                       │
-                         │ Auth / CRUD /         │
-                         │ Validation / Publish  │
-                         └───────────┬───────────┘
-                                     │
-                          ┌──────────┴──────────┐
-                          │                     │
-                          ▼                     ▼
-                 ┌─────────────────┐   ┌─────────────────┐
-                 │   PostgreSQL    │   │    Storage      │
-                 │                 │   │                 │
-                 │ Shows           │   │ Local filesystem│
-                 │ Seasons         │   │ Development     │
-                 │ Episodes        │   │                 │
-                 │ Artwork         │   │ Cloudinary      │
-                 │ Publish Runs    │   │ Production      │
-                 └─────────────────┘   └────────┬────────┘
-                                                │
-                                                ▼
-                                      Published Catalogue
-                                      Immutable Snapshot
-                                                │
-                                                ▼
-                                      ┌──────────────────┐
-                                      │  Viewer (React)  │
-                                      │                  │
-                                      │ Public read-only │
-                                      │ catalogue UI     │
-                                      └──────────────────┘
-
-The Viewer does not depend on the CMS UI or administrative APIs. It consumes the published catalogue.
-```
-Tech Stack
-Backend
-Python
-FastAPI
-SQLAlchemy
-PostgreSQL
-Alembic
-Pydantic
-JWT authentication
-Argon2 password hashing
-Pytest
-Ruff
-CMS
-React
-TypeScript
-Vite
-Viewer
-React
-TypeScript
-Vite
-Storage
-
-Development:
-
-Local filesystem
-
-Production:
-Cloudinary
-CI
-GitHub Actions
-Ruff
-Pytest
-npm build
-Docker build
-Deployment
-Backend: Render
-CMS: Vercel
-Viewer: Vercel
-Production database: PostgreSQL
-Production media/catalogue storage: Cloudinary
-Project Structure
-```text
-peblo-tv-mini/
-│
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── core/
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   ├── storage/
-│   │   └── seed.py
-│   │
-│   └── tests/
-│
-├── cms/
-│   └── src/
-│
-├── viewer/
-│   └── src/
-│
-├── seed_data/
-│
-├── .github/
-│   └── workflows/
-│
-├── docker-compose.yml
-├── docker-compose.prod.yml
-├── .dockerignore
-├── .env.example
-└── README.md
-```
-Features
-CMS / Backend
-Authentication
-User registration/login.
-JWT bearer authentication.
-Current-user endpoint.
-Password hashing using Argon2.
-Role-based access control.
-Roles
-The application supports:
-
-Editor
-- Manage content
-- Create/update/delete content
-- Upload artwork
-
-Admin
-- All Editor capabilities
-- Publish catalogue
-Content Management
-Shows.
-Seasons.
-Episodes.
-Episode metadata.
-Episode artwork.
-Published/unpublished states.
-Content grouping for episode variants/languages.
-Artwork
-
-Episode artwork is uploaded through the backend storage abstraction.
-
-The implementation supports the required artwork variants and validates uploaded artwork before accepting it.
-
-Catalogue
-Catalogue validation.
-Catalogue generation.
-Catalogue publishing.
-Publish run tracking.
-Published catalogue snapshots.
-Cloudinary storage.
-Seed Data
-
-The repository contains seed data for local and production setup.
-
-Seed data includes shows, seasons, episodes, categories, and required episode artwork.
-
-Viewer
-
-The Viewer is a public-facing React application that consumes the published catalogue.
-
-Implemented Pages
-Home
-
-Displays the available catalogue content.
-
-Shows
-
-Dedicated shows listing page.
-
-Route:
-
-/shows
-Show Details
-
-Displays information about a selected show, including its seasons and episodes.
-
-Route:
-
-/shows/:slug
-Watch
-
-Displays the selected episode and its available language options.
-
-Route:
-
-/watch/:id
-
-The current Watch page uses a mock video player. Real video upload, transcoding, streaming, and playback infrastructure were outside the implemented scope.
-
-Search
-
-Provides catalogue search functionality.
-
-Route:
-
-/search
-Viewer Features
-Home page.
-Shows listing page.
-Show detail pages.
-Episode/watch page.
-Search page.
-Published catalogue consumption.
-Responsive show-card grid.
-Audio language selector for episodes with multiple languages.
-Safe fallback when an unavailable language is selected.
-Empty/search result handling.
-Client-side routing.
-SPA refresh support.
-Local Development
-
-There are two supported development approaches.
-
-Option 1 — Docker Compose
-
-From the repository root:
-
-docker-compose up --build
-
-The Docker Compose development stack contains:
-
-PostgreSQL
     ↓
-FastAPI Backend
+Publish
     ↓
-CMS + Viewer
+Immutable Catalogue
+    ↓
+Viewer (React)
+```
 
-The backend can use local filesystem storage for development.
+The Viewer only uses the published catalogue. It does not use CMS/admin APIs.
 
-Local URLs
+## Tech Stack
 
-Backend:
+**Backend**
 
-http://localhost:8000
+* Python
+* FastAPI
+* SQLAlchemy
+* PostgreSQL
+* Alembic
+* Pydantic
+* JWT + Argon2
+* Pytest + Ruff
 
-API documentation:
+**Frontend**
 
-http://localhost:8000/docs
+* React
+* TypeScript
+* Vite
+* TanStack Query
 
-CMS:
+**Storage**
 
-http://localhost:5173
+* Local filesystem for development
+* Cloudinary for production
 
-Viewer:
+**DevOps**
 
-http://localhost:5174
-Manual Development
-Backend
+* Docker Compose
+* GitHub Actions
+* Render
+* Vercel
 
-Create a virtual environment:
+## Main Features
 
-cd backend
-python -m venv .venv
+### CMS / Backend
 
-Activate the environment and install dependencies:
+* JWT authentication
+* Editor/Admin roles
+* Shows, seasons and episodes CRUD
+* Episode artwork upload
+* Artwork validation
+* Catalogue validation
+* Catalogue publishing
+* Publish run history
+* Language variants using `content_group`
+* Server-side catalogue search
 
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+Artwork requirements are enforced by the backend:
 
-Run the API:
+* Poster: `600x900`, max `200 KB`
+* Banner: `1280x720`, max `200 KB`
+* Thumbnail: `640x360`, max `200 KB`
 
-uvicorn app.main:app --reload --port 8000
+### Viewer
 
-Backend:
+* Home page with featured content
+* Shows browsing
+* Show details
+* Seasons and episodes
+* Search
+* Category and language filters
+* Language selection for grouped episodes
+* Responsive UI
+* Empty/error states
+* Mock watch player
 
-http://localhost:8000
+Real video upload, transcoding and streaming are not included because they were outside the scope of this challenge.
 
-API docs:
+## Catalogue Publishing
 
-http://localhost:8000/docs
-CMS
+Only valid published content is included.
 
-From the repository root:
-
-cd cms
-npm install
-npm run dev
-
-CMS:
-
-http://localhost:5173
-Viewer
-
-From the repository root:
-
-cd viewer
-npm install
-npm run dev
-
-Viewer:
-
-http://localhost:5174
-Environment Variables
-
-The repository includes .env.example files covering the application configuration.
-
-Typical backend configuration includes:
-
-DATABASE_URL=
-SECRET_KEY=
-CORS_ORIGINS=
-STORAGE_BACKEND=
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-Frontend Vite environment variables are used where required for application configuration.
-
-Production Secret Management
-
-Secrets should never be committed to source control.
-
-In production, sensitive values such as:
-
-Database credentials.
-JWT signing keys.
-Cloudinary credentials.
-API keys.
-
-should be stored using the hosting provider's encrypted environment-variable/secret management system.
-
-The application reads these values from environment variables rather than hardcoding them into source code.
-
-Catalogue Publishing Flow
-
-The catalogue publishing flow separates content editing from public availability.
-
-Editor/Admin
-     │
-     ▼
-Create / Update Content
-     │
-     ▼
-Backend PostgreSQL
-     │
-     ▼
-Catalogue Validation
-     │
-     ▼
+```text
+Edit Content
+     ↓
+Validate
+     ↓
 Build Catalogue
-     │
-     ▼
+     ↓
 Create Publish Run
-     │
-     ▼
-Persist Immutable Catalogue
-     │
-     ▼
-Mark Publish Run Completed
-     │
-     ▼
-Public Viewer
-
-Only published content is included in the public catalogue.
-
-The Viewer therefore does not need access to the CMS database or administrative endpoints.
-
-Engineering Decisions
-Atomic / Safe Publishing
-
-Publishing is designed so that the Viewer does not read a catalogue while it is being actively generated.
-
-The backend builds the catalogue from the published database state and validates the resulting catalogue before publication.
-
-Each publish run creates an immutable catalogue associated with that run:
-
-catalogues/catalogue-{publish_run_id}.json
-
-The publish run is marked as completed only after the catalogue has been successfully persisted.
-
-The public catalogue endpoint resolves the latest completed publish run and points the Viewer to that immutable catalogue.
-
-This avoids exposing a partially written catalogue.
-
-Failure During Publishing
-
-If the process dies before a new publish run is completed:
-```text
-Previous completed catalogue
-          │
-          │ remains available
-          ▼
-       Viewer
+     ↓
+Save Immutable Snapshot
+     ↓
+Mark Run Completed
+     ↓
+Viewer
 ```
-The failed operation does not replace the previous completed catalogue with a partially generated file.
 
-A failed publish run can be recorded as failed, while the last successfully completed catalogue remains the public version.
+Each publish creates:
 
-This also makes each successful publish independently addressable.
+```text
+catalogues/catalogue-{publish_run_id}.json
+```
 
-Storage Abstraction
+The Viewer uses the latest **completed** publish run.
 
-Storage operations are separated from business logic through a storage abstraction.
+This means if publishing fails halfway, the previous catalogue stays available. A partially written catalogue is never used by the Viewer.
 
-The current storage implementations are:
+## Search
+
+Search is done against the published catalogue through:
+
+```text
+GET /api/v1/catalogue/search
+```
+
+It supports:
+
+* `q`
+* `category`
+* `language`
+* `section`
+
+Filters work together using AND logic.
+
+For this challenge, the catalogue is small enough for this approach. If the catalogue becomes much larger, I would move search to PostgreSQL Full-Text Search or a dedicated search service such as OpenSearch.
+
+## Storage
+
+The application uses a storage abstraction:
+
 ```text
 Storage
 ├── LocalStorage
 └── CloudinaryStorage
 ```
-Development uses the local filesystem.
 
-Production uses Cloudinary.
+The business logic does not depend directly on Cloudinary.
 
-Business logic interacts with the storage abstraction instead of depending directly on a storage provider.
+To move to Cloudflare R2, I would add an `R2Storage` implementation and update the storage configuration. The artwork and publishing logic would stay the same.
 
-Moving to Cloudflare R2
+## Why a Published Catalogue?
 
-To move the application from Cloudinary to Cloudflare R2, I would:
+The Viewer is mostly read-heavy, while content changes less often.
 
-Implement an R2Storage adapter using an S3-compatible client.
-Add R2 bucket, endpoint, access-key, and secret configuration.
-Select the R2 implementation through configuration.
+A published catalogue:
 
-The catalogue publishing and artwork business logic would not need to change.
+* reduces database queries
+* keeps the Viewer separate from CMS internals
+* gives the Viewer a stable data format
+* ensures only published content is visible
 
-This keeps infrastructure-specific code isolated from application logic.
+The main trade-off is freshness: CMS changes are visible only after a successful publish.
 
-Search
+## Validation and Roles
 
-Viewer search currently operates against the published catalogue.
+Validation is done on the backend, not only in the frontend.
 
-For the challenge-sized catalogue, this is intentionally implemented simply because:
+Examples:
 
-The catalogue is relatively small.
-The Viewer is read-heavy.
-Search can be performed without an additional API request for every query.
-The public Viewer remains independent from the CMS/database.
+* Published episodes need duration and artwork.
+* `(content_group, language)` must be unique.
+* Published shows need a valid section.
+* Artwork dimensions and file size are checked.
+* Season `0` is reserved for trailers.
 
-The trade-off is that the browser needs the catalogue data and search cost grows with catalogue size.
+Roles are enforced by the backend:
 
-For a substantially larger catalogue, I would move search to a backend/indexing layer.
-
-Possible next steps would be:
-
-PostgreSQL Full-Text Search
-        or
-Dedicated Search Index
-        │
-        ▼
-OpenSearch / similar system
-
-For moderate scale, PostgreSQL full-text search would likely be sufficient. For a much larger catalogue or more advanced relevance/filtering requirements, a dedicated search index would be more appropriate.
-
-Why Use a Published Catalogue?
-
-The Viewer is a read-heavy application, while content changes relatively infrequently.
-
-Instead of querying the database and running CMS-specific joins and business logic for every public request, the publishing process creates a read-optimized catalogue snapshot.
-
-Benefits
-Reduces public database traffic.
-Keeps the Viewer independent from CMS internals.
-Creates a stable public data contract.
-Ensures only published content is publicly visible.
-Separates editing from public availability.
-Makes the public Viewer simpler to operate.
-Trade-offs
-
-The main trade-off is freshness.
-
-Changes made in the CMS are not visible to the public Viewer until the next successful publish.
-
-The catalogue can also become large as content grows.
-
-At larger scale, I would consider:
-
-CDN caching.
-Compression.
-Catalogue partitioning.
-Pagination.
-Backend search.
-Dedicated indexing.
-Catalogue Validation
-
-Catalogue validation is performed on the backend before publication.
-
-This is important because frontend validation alone cannot guarantee correctness. The backend remains the source of truth and should prevent invalid content from being published even if a request bypasses the CMS UI.
-
-Validation therefore acts as a safety boundary before public availability.
-
-Roles and Authorization
-
-Authentication uses JWT bearer tokens.
-
-Passwords are securely hashed using Argon2.
-
-Authorization separates content editing from catalogue publishing:
-
+```text
 Editor
-  └── Content CRUD
+ └── Content CRUD
 
 Admin
-  ├── Content CRUD
-  └── Catalogue Publishing
-
-Publishing is therefore treated as a privileged operation rather than simply another content mutation.
-
-The Viewer does not use administrative endpoints.
-
-Pipeline and CI
-
-GitHub Actions runs for pushes and pull requests targeting main.
-
-The CI workflow currently performs:
-
-Backend
-├── Ruff lint
-└── Pytest
-
-Viewer
-└── npm build
-
-CMS
-└── npm build
-
-Docker
-└── Docker image build
-
-This provides automated checks for backend correctness, frontend compilation, and container buildability.
-
-Deployment
-```text
-The application is deployed as separate services:
-
-                 GitHub
-                    │
-       ┌────────────┼────────────┐
-       │            │            │
-       ▼            ▼            ▼
-    Render       Vercel       Vercel
-       │            │            │
-       ▼            ▼            ▼
-    Backend        CMS        Viewer
-
-The backend runs on Render.
+ ├── Content CRUD
+ └── Catalogue Publishing
 ```
-The CMS and Viewer are deployed independently on Vercel.
 
-The production Viewer consumes the published catalogue through the backend catalogue delivery flow.
+## Local Setup
 
-Health and Operability
+### Docker
 
-The backend exposes a lightweight health endpoint:
+From the project root:
 
-GET /health
+```bash
+docker compose up --build
+```
 
-Expected response:
+Apps:
 
-{
-  "status": "ok"
-}
-Alerting
+```text
+Backend: http://localhost:8000
+API Docs: http://localhost:8000/docs
+CMS: http://localhost:5173
+Viewer: http://localhost:5174
+```
 
-One important production alert would be:
+### Environment
 
-Alert when the backend health endpoint fails repeatedly or becomes unavailable.
+Copy `.env.example` and configure the required values.
 
-The backend is a dependency for the CMS and for the public catalogue delivery flow. A sustained backend outage therefore affects both content management and public catalogue access.
+Secrets such as database credentials, JWT keys and storage credentials should be stored in the hosting provider's secret/environment-variable system and not committed to Git.
 
-A second useful operational signal would be repeated failed publish runs because the backend may remain healthy while newly approved content is unable to reach the public Viewer.
+## Testing
 
-Testing
-Backend
+Backend:
 
-Run:
-
+```bash
 cd backend
-python -m pytest tests
-Backend Lint
-ruff check backend --select F
-Viewer Build
+pytest tests
+ruff check .
+```
+
+CMS:
+
+```bash
+cd cms
+npm run lint
+npm run test
+npm run build
+```
+
+Viewer:
+
+```bash
 cd viewer
 npm run build
-CMS Build
-cd cms
-npm run build
+```
 
-These checks are also executed through GitHub Actions.
+GitHub Actions also runs the main lint, test and build checks.
 
-Security
+## CI / Deployment
 
-The project includes:
+GitHub Actions checks the project on pushes and pull requests.
 
-JWT-based authentication.
-Argon2 password hashing.
-Role-based authorization.
-Backend-side validation.
-Environment-based secrets.
-CORS configuration.
-Separation between public Viewer access and administrative CMS endpoints.
+The pipeline covers:
 
-Production secrets are kept outside the repository and supplied through environment variables.
+* Backend lint and tests
+* CMS checks/build
+* Viewer build
+* Docker image builds
 
-What Was Left Out
+Deployment:
 
-The implementation prioritizes the core assignment requirements and intentionally leaves some optional/production features out.
+```text
+GitHub
+ ├── Render → Backend
+ ├── Vercel → CMS
+ └── Vercel → Viewer
+```
 
-Catalogue Rollback
+## Health / Operability
 
-Skipped as a dedicated admin UI.
+The backend provides:
 
-The publishing system already creates immutable publish-run catalogue snapshots, which provides the foundation for rollback without adding another management workflow.
+```text
+GET /health
+```
 
-Publish Dry Run / Diff
+A useful production alert would be repeated backend health-check failures because the backend is required by both the CMS and public catalogue delivery.
 
-Skipped due to time.
+Repeated failed publish runs would also be useful to monitor.
 
-Catalogue validation was prioritized because it directly prevents unsafe publication.
+## What I Left Out
 
-A future dry-run feature could compare the current draft state with the latest published snapshot before committing a publish.
+I focused on the core requirements and skipped some optional features:
 
-Full Audit Log
+* **Catalogue rollback UI** — immutable publish snapshots already provide the base for rollback.
+* **Publish dry-run/diff** — skipped to focus on validation and safe publishing.
+* **Full CRUD audit log** — publish runs record who published, but field-level change history is not included.
+* **Real video streaming** — outside the challenge scope.
 
-A full field-level CRUD audit system was outside the initial scope.
+## AI Usage
 
-Publish runs record publication activity and the user who triggered publishing, but detailed history for every individual field change was not implemented.
+I used AI as a development assistant for brainstorming, debugging, code review and documentation.
 
-Real Video Streaming
+I reviewed the generated suggestions myself and changed or rejected them when they did not match the assignment or the project structure.
 
-The Watch page currently uses a mock video player.
+One example was catalogue publishing. I changed the implementation to use immutable publish-run snapshots instead of overwriting a shared catalogue file.
 
-Real video upload, transcoding, streaming, adaptive bitrate delivery, and video CDN infrastructure were outside the implemented scope.
+## Time Spent
 
-Movies
+Approximate total: **30–40 hours**, including development, debugging, testing, deployment and documentation.
 
-The Shows browsing flow is implemented.
+## Repository
 
-Additional Viewer functionality such as Movies is still being developed.
+GitHub: https://github.com/shishir-21/peblo-tv-mini
 
-AI Usage
-
-AI tools were used during development as an engineering assistant for:
-
-Brainstorming implementation approaches.
-Debugging.
-Reviewing architecture ideas.
-Understanding unfamiliar technologies.
-Identifying edge cases.
-Improving documentation.
-Reviewing implementation decisions.
-
-AI-generated suggestions were manually reviewed rather than accepted blindly.
-
-When generated suggestions conflicted with the assignment requirements or the existing repository architecture, they were modified or rejected.
-
-A practical example was catalogue delivery and caching. A mutable Cloudinary catalogue.json URL could continue serving stale CDN content after updates. Instead of relying only on cache invalidation, the implementation was changed to use immutable publish-run catalogue snapshots and a backend endpoint that resolves the latest completed publish.
-
-This was tested against the deployed application rather than being accepted based only on generated code or assumptions.
-
-Development Status
-Implemented
-Backend foundation.
-PostgreSQL data model.
-Database migrations.
-Authentication.
-JWT authorization.
-Argon2 password hashing.
-Editor/Admin roles.
-Show CRUD.
-Season CRUD.
-Episode CRUD.
-Artwork upload.
-Storage abstraction.
-Cloudinary production storage.
-Local development storage.
-Catalogue validation.
-Catalogue publishing.
-Publish run tracking.
-Seed data.
-CMS.
-Public Viewer.
-Home page.
-Shows browsing flow.
-Show detail pages.
-Episode/watch flow.
-Search.
-Language selection.
-Responsive Viewer UI.
-GitHub Actions CI.
-Docker build.
-Production deployment.
-Still Being Developed
-Additional Viewer sections such as Movies.
-Real video playback and streaming infrastructure.
-Repository
-
-GitHub:
-
-https://github.com/shishir-21/peblo-tv-mini
-
-Production Viewer:
-
-https://viewer-six-kappa.vercel.app
-
-Production CMS:
-
-https://peblo-tv-cms.vercel.app
-
-Backend API:
-
-https://peblo-tv-mini-fvu7.onrender.com
-
-API Documentation:
-
-https://peblo-tv-mini-fvu7.onrender.com/docs
-
-Time Spent
-
-Approximate development breakdown:
-
-Area	Approx. Time
-Backend foundation and data model	4–5 hrs
-Authentication and authorization	2–3 hrs
-CMS	4–5 hrs
-Artwork and storage	2–3 hrs
-Catalogue validation and publishing	4–5 hrs
-Viewer and Shows flow	4–5 hrs
-Search and language selection	2–3 hrs
-Docker, CI and deployment	3–4 hrs
-Debugging and production verification	3–4 hrs
-Documentation	1–2 hrs
-Total	30–40 hrs
-
-The total includes implementation, debugging, testing, deployment, and production verification.
-
-Assignment Notes
-
-This project was built as part of the Peblo Full Stack Development Challenge.
-
-The implementation prioritizes:
-
-Safe publishing.
-Clear separation between CMS and public Viewer.
-Backend-enforced validation and authorization.
-Storage abstraction.
-Operationally understandable deployment.
-Automated CI.
-Honest trade-offs around scope and scalability.
-
-The goal was not only to implement features, but to make deliberate engineering decisions appropriate for the size and requirements of the assignment.
+The main goal was to keep the system simple but safe, with backend validation, proper role checks, immutable publishing, separated CMS/Viewer applications and a working local/production setup.
