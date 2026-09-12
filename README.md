@@ -89,3 +89,62 @@ These credentials are provided for testing the deployed CMS and authentication f
    - Viewer build
    - CMS build
    - Docker build
+
+## Engineering Decisions
+
+### Atomic publishing
+
+The catalogue is generated completely in memory and validated before publication.
+Each publish creates an immutable catalogue-{run_id}.json object.
+
+A publish run is marked completed only after the catalogue has been
+successfully persisted. GET /catalog resolves the latest completed run,
+so readers never observe a partially generated catalogue.
+
+If the process dies before the run is completed, the previous completed
+catalogue remains live. The failed run is recorded as failed.
+
+### Storage abstraction
+
+The application uses a Storage interface with LocalStorage and
+CloudinaryStorage implementations.
+
+Business logic only depends on the Storage interface. Moving to Cloudflare
+R2 would therefore require a new R2Storage implementation plus configuration
+for bucket/credentials, without changing the publishing or artwork APIs.
+
+### Search
+
+Viewer search is performed against the published catalogue rather than
+the CMS database.
+
+For the challenge-sized catalogue this is intentionally simple. At larger
+catalogue sizes, scanning the complete JSON on every search request would
+become inefficient. I would move search to PostgreSQL full-text search or
+a dedicated search index such as OpenSearch.
+
+### Why a published catalogue?
+
+The viewer is read-heavy and the content changes much less frequently than
+users browse it. Publishing a static catalogue removes database joins and
+CMS-specific logic from viewer requests and gives us a stable public
+contract.
+
+The trade-off is freshness: changes are not visible until the next publish.
+The catalogue can also become large, at which point CDN caching, compression,
+partitioning or a dedicated search/indexing layer would be appropriate.
+
+### Skipped
+
+- Catalogue rollback: skipped because versioned immutable catalogues provide
+  the foundation but the assignment did not require an admin rollback UI.
+- Dry-run diff: skipped due to time; validation was prioritized because it
+  directly blocks unsafe publication.
+- Full audit log: skipped because publish runs already record who triggered
+  publication; field-level CRUD auditing was outside the v1 scope.
+
+### AI usage
+
+AI was used for brainstorming, debugging and reviewing implementation ideas.
+Generated code was manually reviewed and adjusted where it did not match the
+assignment requirements or repository architecture.
