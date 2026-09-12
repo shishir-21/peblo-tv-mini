@@ -91,7 +91,7 @@ Published Catalogue
       ↓
 Public Viewer
 ```
-```text
+
 Production
 Live Applications
 Service	URL
@@ -100,7 +100,7 @@ API Documentation	https://peblo-tv-mini-fvu7.onrender.com/docs
 CMS	https://peblo-tv-cms.vercel.app
 Viewer	https://viewer-six-kappa.vercel.app
 GitHub Repository	https://github.com/shishir-21/peblo-tv-mini
-```
+
 
 Test Credentials
 The following accounts are provided for testing the deployed CMS and authentication flow.
