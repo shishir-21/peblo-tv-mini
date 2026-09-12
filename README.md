@@ -184,7 +184,6 @@ Development:
 Local filesystem
 
 Production:
-```text
 Cloudinary
 CI
 GitHub Actions
@@ -199,6 +198,7 @@ Viewer: Vercel
 Production database: PostgreSQL
 Production media/catalogue storage: Cloudinary
 Project Structure
+```text
 peblo-tv-mini/
 │
 ├── backend/
@@ -229,6 +229,7 @@ peblo-tv-mini/
 ├── .dockerignore
 ├── .env.example
 └── README.md
+```
 Features
 CMS / Backend
 Authentication
@@ -238,7 +239,6 @@ Current-user endpoint.
 Password hashing using Argon2.
 Role-based access control.
 Roles
-```
 The application supports:
 
 Editor
