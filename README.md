@@ -324,7 +324,7 @@ One example was catalogue publishing. I changed the implementation to use immuta
 
 ## Time Spent
 
-Approximate total: **45–50 hours**, including development, debugging, testing, deployment and documentation.
+Approximate total: **50–55 hours**, including development, debugging, testing, deployment and documentation.
 
 ## Repository
 
