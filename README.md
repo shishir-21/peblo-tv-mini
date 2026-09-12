@@ -1,13 +1,20 @@
 # Peblo TV Mini
 
-A full-stack children's content platform built for the Peblo Full Stack Development Challenge.
+Peblo TV Mini is a full-stack children's content platform with an internal CMS and a public Viewer.
 
-The project has two React apps:
+**Flow:**
 
-* **CMS** — for editors and admins to manage content.
-* **Viewer** — public app for browsing the published catalogue.
-
-Content is stored in PostgreSQL, validated before publishing, and then published as an immutable catalogue snapshot for the Viewer.
+```text
+CMS (React)
+    ↓
+FastAPI + PostgreSQL
+    ↓
+Validation + Publish
+    ↓
+Immutable Catalogue Snapshot
+    ↓
+Viewer (React)
+```
 
 ## Live Demo
 
@@ -19,7 +26,7 @@ Content is stored in PostgreSQL, validated before publishing, and then published
 | Viewer   | https://viewer-six-kappa.vercel.app          |
 | GitHub   | https://github.com/shishir-21/peblo-tv-mini  |
 
-## Test Accounts
+### Test Accounts
 
 **Editor**
 
@@ -33,146 +40,110 @@ Content is stored in PostgreSQL, validated before publishing, and then published
 
 Editor can manage content. Admin can also publish the catalogue.
 
-## Architecture
-
-```text
-CMS (React)
-    ↓
-FastAPI API
-    ↓
-PostgreSQL + Storage
-    ↓
-Validation
-    ↓
-Publish
-    ↓
-Immutable Catalogue
-    ↓
-Viewer (React)
-```
-
-The Viewer only uses the published catalogue. It does not use CMS/admin APIs.
-
 ## Tech Stack
 
-**Backend**
-
-* Python
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Alembic
-* Pydantic
-* JWT + Argon2
-* Pytest + Ruff
-
-**Frontend**
-
-* React
-* TypeScript
-* Vite
-* TanStack Query
-
-**Storage**
-
-* Local filesystem for development
-* Cloudinary for production
-
-**DevOps**
-
-* Docker Compose
-* GitHub Actions
-* Render
-* Vercel
+* **Backend:** FastAPI, SQLAlchemy, PostgreSQL, Alembic, Pydantic
+* **Auth:** JWT + Argon2
+* **CMS:** React + TypeScript + Vite + TanStack Query
+* **Viewer:** React + TypeScript + Vite
+* **Storage:** Local filesystem in development, Cloudinary in production
+* **Testing:** Pytest + Vitest
+* **CI:** GitHub Actions
+* **Deployment:** Render + Vercel
 
 ## Main Features
 
 ### CMS / Backend
 
-* JWT authentication
-* Editor/Admin roles
-* Shows, seasons and episodes CRUD
-* Episode artwork upload
-* Artwork validation
-* Catalogue validation
-* Catalogue publishing
+* JWT authentication and role-based authorization
+* Show, season and episode CRUD
+* Backend validation before publishing
+* Episode language/content-group support
+* Artwork upload with backend validation
+* Human-readable artwork validation errors
+* Catalogue validation report
+* Admin-only catalogue publishing
 * Publish run history
-* Language variants using `content_group`
-* Server-side catalogue search
+* Immutable catalogue snapshots
+* Backend catalogue search with filters
 
-Artwork requirements are enforced by the backend:
+### Artwork
 
-* Poster: `600x900`, max `200 KB`
-* Banner: `1280x720`, max `200 KB`
-* Thumbnail: `640x360`, max `200 KB`
+The three required artwork types are enforced on the backend:
+
+| Type      | Required size | Ratio |
+| --------- | ------------: | ----: |
+| Poster    |      ~600×900 |   2:3 |
+| Banner    |     ~1280×720 |  16:9 |
+| Thumbnail |      ~640×360 |  16:9 |
+
+Maximum file size is **200 KB**.
+
+An episode cannot be published without required artwork and duration.
 
 ### Viewer
 
-* Home page with featured content
-* Shows browsing
-* Show details
-* Seasons and episodes
-* Search
+* Featured home page
+* Shows listing
+* Show detail pages
+* Season and episode browsing
+* Season 0 trailers hidden from normal seasons
+* Grouped language variants
+* Episode language selection
+* Search by show title, episode title and category
 * Category and language filters
-* Language selection for grouped episodes
-* Responsive UI
 * Empty/error states
-* Mock watch player
+* Responsive UI
+* Slow-image friendly loading/fallbacks
 
-Real video upload, transcoding and streaming are not included because they were outside the scope of this challenge.
+## Local Development
 
-## Catalogue Publishing
+### Docker
 
-Only valid published content is included.
+From the project root:
 
-```text
-Edit Content
-     ↓
-Validate
-     ↓
-Build Catalogue
-     ↓
-Create Publish Run
-     ↓
-Save Immutable Snapshot
-     ↓
-Mark Run Completed
-     ↓
-Viewer
+```bash
+docker-compose up --build
 ```
 
-Each publish creates:
+Services:
+
+```text
+PostgreSQL
+    ↓
+FastAPI
+    ↓
+CMS + Viewer
+```
+
+Local URLs:
+
+* Backend: http://localhost:8000
+* API Docs: http://localhost:8000/docs
+* CMS: http://localhost:5173
+* Viewer: http://localhost:5174
+
+The project includes seed data for local development.
+
+## Key Engineering Decisions
+
+### 1. Atomic Publishing
+
+Publishing never overwrites one shared live catalogue file.
+
+Each successful publish creates an immutable snapshot:
 
 ```text
 catalogues/catalogue-{publish_run_id}.json
 ```
 
-The Viewer uses the latest **completed** publish run.
+The publish run is marked completed only after the snapshot is successfully stored. The public catalogue endpoint uses the latest completed run.
 
-This means if publishing fails halfway, the previous catalogue stays available. A partially written catalogue is never used by the Viewer.
+If publishing fails or the process stops midway, the previous completed catalogue stays available. This means the Viewer never reads a half-written catalogue.
 
-## Search
+### 2. Storage Abstraction
 
-Search is done against the published catalogue through:
-
-```text
-GET /api/v1/catalogue/search
-```
-
-It supports:
-
-* `q`
-* `category`
-* `language`
-* `section`
-
-Filters work together using AND logic.
-
-For this challenge, the catalogue is small enough for this approach. If the catalogue becomes much larger, I would move search to PostgreSQL Full-Text Search or a dedicated search service such as OpenSearch.
-
-## Storage
-
-The application uses a storage abstraction:
+Storage is separated from the application logic.
 
 ```text
 Storage
@@ -180,154 +151,141 @@ Storage
 └── CloudinaryStorage
 ```
 
-The business logic does not depend directly on Cloudinary.
+Moving to Cloudflare R2 would require an `R2Storage` adapter and new storage configuration. The publishing and artwork business logic would not need to change.
 
-To move to Cloudflare R2, I would add an `R2Storage` implementation and update the storage configuration. The artwork and publishing logic would stay the same.
+### 3. Search
 
-## Why a Published Catalogue?
+Search is handled by the backend instead of downloading the whole catalogue into the browser.
 
-The Viewer is mostly read-heavy, while content changes less often.
+`q` matches:
 
-A published catalogue:
+* show title
+* episode title
+* category
 
-* reduces database queries
-* keeps the Viewer separate from CMS internals
+Category, language and section filters can be combined.
+
+This is enough for the challenge-sized catalogue. At larger scale, I would add PostgreSQL full-text search and proper indexes, or move to a dedicated search system such as OpenSearch.
+
+### 4. Why Use a Published Catalogue?
+
+The Viewer is read-heavy and content changes less often than users browse it.
+
+A published snapshot:
+
+* reduces database traffic
+* keeps the Viewer independent from CMS/admin APIs
+* exposes only approved content
 * gives the Viewer a stable data format
-* ensures only published content is visible
 
-The main trade-off is freshness: CMS changes are visible only after a successful publish.
+The trade-off is freshness: CMS changes become public only after the next successful publish.
 
-## Validation and Roles
+At larger scale, I would add CDN caching, compression, catalogue partitioning and stronger search/indexing.
 
-Validation is done on the backend, not only in the frontend.
+### 5. Validation and Roles
+
+Important validation is enforced by the backend, not only by the UI.
 
 Examples:
 
-* Published episodes need duration and artwork.
+* Published episodes need artwork and duration.
 * `(content_group, language)` must be unique.
 * Published shows need a valid section.
-* Artwork dimensions and file size are checked.
-* Season `0` is reserved for trailers.
+* Artwork dimensions, aspect ratio and file size are checked server-side.
 
-Roles are enforced by the backend:
+Roles are enforced through authorization:
 
 ```text
 Editor
- └── Content CRUD
+└── Content CRUD
 
 Admin
- ├── Content CRUD
- └── Catalogue Publishing
+├── Content CRUD
+└── Catalogue Publishing
 ```
 
-## Local Setup
-
-### Docker
-
-From the project root:
-
-```bash
-docker compose up --build
-```
-
-Apps:
-
-```text
-Backend: http://localhost:8000
-API Docs: http://localhost:8000/docs
-CMS: http://localhost:5173
-Viewer: http://localhost:5174
-```
-
-### Environment
-
-Copy `.env.example` and configure the required values.
-
-Secrets such as database credentials, JWT keys and storage credentials should be stored in the hosting provider's secret/environment-variable system and not committed to Git.
-
-## Testing
-
-Backend:
-
-```bash
-cd backend
-pytest tests
-ruff check .
-```
-
-CMS:
-
-```bash
-cd cms
-npm run lint
-npm run test
-npm run build
-```
-
-Viewer:
-
-```bash
-cd viewer
-npm run build
-```
-
-GitHub Actions also runs the main lint, test and build checks.
+The Viewer only uses public catalogue endpoints.
 
 ## CI / Deployment
 
-GitHub Actions checks the project on pushes and pull requests.
+GitHub Actions checks the backend and frontend builds and builds the Docker images.
 
-The pipeline covers:
-
-* Backend lint and tests
-* CMS checks/build
-* Viewer build
-* Docker image builds
-
-Deployment:
+Production deployment:
 
 ```text
 GitHub
- ├── Render → Backend
- ├── Vercel → CMS
- └── Vercel → Viewer
+  ├── Render → Backend
+  └── Vercel → CMS + Viewer
 ```
 
-## Health / Operability
+Production secrets are provided through environment variables and are not committed to the repository. `.env.example` documents the required configuration.
 
-The backend provides:
+The backend exposes:
 
 ```text
 GET /health
 ```
 
-A useful production alert would be repeated backend health-check failures because the backend is required by both the CMS and public catalogue delivery.
+A useful production alert would be repeated health-check failures because the backend is required by both the CMS and public catalogue delivery. Repeated failed publish runs would also be a useful operational signal.
 
-Repeated failed publish runs would also be useful to monitor.
+## Testing
+
+Backend tests cover authentication, validation, publishing, catalogue behaviour and search.
+
+Run backend tests:
+
+```bash
+cd backend
+python -m pytest tests
+```
+
+Frontend checks:
+
+```bash
+cd cms
+npm run build
+
+cd ../viewer
+npm run build
+```
 
 ## What I Left Out
 
-I focused on the core requirements and skipped some optional features:
+I focused on the core assignment requirements and skipped a few optional/production features:
 
-* **Catalogue rollback UI** — immutable publish snapshots already provide the base for rollback.
-* **Publish dry-run/diff** — skipped to focus on validation and safe publishing.
-* **Full CRUD audit log** — publish runs record who published, but field-level change history is not included.
-* **Real video streaming** — outside the challenge scope.
+* **Catalogue rollback UI** — immutable snapshots already provide the base for rollback.
+* **Publish dry-run/diff** — skipped due to time; validation was more important.
+* **Full field-level audit log** — publish runs record publishing activity, but every CRUD field change is not audited.
+* **Real video streaming** — the Watch page uses a mock player; transcoding/CDN/streaming were outside the challenge scope.
+* **Movies** — the Shows flow is implemented; additional content types were outside the main scope.
 
 ## AI Usage
 
-I used AI as a development assistant for brainstorming, debugging, code review and documentation.
+I used AI tools as an engineering assistant for brainstorming, debugging, edge cases, architecture review and documentation.
 
-I reviewed the generated suggestions myself and changed or rejected them when they did not match the assignment or the project structure.
+I reviewed the suggestions manually and changed or rejected them when they did not fit the assignment or the existing codebase.
 
-One example was catalogue publishing. I changed the implementation to use immutable publish-run snapshots instead of overwriting a shared catalogue file.
+One example was catalogue delivery: instead of relying on a mutable `catalogue.json` URL and cache invalidation, I used immutable publish-run snapshots so a failed or stale update cannot replace the current public catalogue unexpectedly.
 
 ## Time Spent
 
-Approximate total: **50–55 hours**, including development, debugging, testing, deployment and documentation.
+| Area                      |           Time |
+| ------------------------- | -------------: |
+| Backend + data model      |        4–5 hrs |
+| Auth + authorization      |        2–3 hrs |
+| CMS                       |        4–5 hrs |
+| Artwork + storage         |        2–3 hrs |
+| Validation + publishing   |        4–5 hrs |
+| Viewer                    |        4–5 hrs |
+| Search + language support |        2–3 hrs |
+| Docker + CI + deployment  |        3–4 hrs |
+| Debugging + verification  |        3–4 hrs |
+| Documentation             |        1–2 hrs |
+| **Total**                 | **~30–40 hrs** |
 
-## Repository
+## Links
 
-GitHub: https://github.com/shishir-21/peblo-tv-mini
-
-The main goal was to keep the system simple but safe, with backend validation, proper role checks, immutable publishing, separated CMS/Viewer applications and a working local/production setup.
+* GitHub: https://github.com/shishir-21/peblo-tv-mini
+* CMS: https://peblo-tv-cms.vercel.app
+* Viewer: https://viewer-six-kappa.vercel.app
+* API Docs: https://peblo-tv-mini-fvu7.onrender.com/docs
